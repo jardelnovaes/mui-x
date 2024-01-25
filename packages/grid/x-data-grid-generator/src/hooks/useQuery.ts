@@ -5,7 +5,7 @@ import {
   GridFilterModel,
   GridSortModel,
   GridRowId,
-  GridLinkOperator,
+  GridLogicOperator,
   GridFilterOperator,
   GridColDef,
 } from '@mui/x-data-grid-pro';
@@ -16,6 +16,7 @@ import {
   getColumnsFromOptions,
   getInitialState,
 } from './useDemoData';
+import { randomInt } from '../services/random-generator';
 
 const simplifiedValueGetter = (field: string, colDef: GridColDef) => (row: GridRowModel) => {
   const params = { id: row.id, row, field, rowNode: {} };
@@ -63,18 +64,18 @@ const getFilteredRows = (
     return rows;
   }
 
-  const valueGetters = filterModel.items.map(({ columnField }) =>
+  const valueGetters = filterModel.items.map(({ field }) =>
     simplifiedValueGetter(
-      columnField,
-      columnsWithDefaultColDef.find(({ field }) => field === columnField) as any,
+      field,
+      columnsWithDefaultColDef.find((column) => column.field === field) as any,
     ),
   );
   const filterFunctions = filterModel.items.map((filterItem) => {
-    const { columnField, operatorValue } = filterItem;
-    const colDef = columnsWithDefaultColDef.find(({ field }) => field === columnField) as any;
+    const { field, operator } = filterItem;
+    const colDef = columnsWithDefaultColDef.find((column) => column.field === field) as any;
 
     const filterOperator: any = colDef.filterOperators.find(
-      ({ value }: GridFilterOperator) => operatorValue === value,
+      ({ value }: GridFilterOperator) => operator === value,
     );
 
     let parsedValue = filterItem.value;
@@ -88,7 +89,7 @@ const getFilteredRows = (
     return filterOperator?.getApplyFilterFn({ filterItem, value: parsedValue }, colDef);
   });
 
-  if (filterModel.linkOperator === GridLinkOperator.Or) {
+  if (filterModel.logicOperator === GridLogicOperator.Or) {
     return rows.filter((row: GridRowModel) =>
       filterModel.items.some((_, index) => {
         const value = valueGetters[index](row);
@@ -107,7 +108,7 @@ const getFilteredRows = (
 /**
  * Simulates server data loading
  */
-const loadServerRows = (
+export const loadServerRows = (
   rows: GridRowModel[],
   queryOptions: QueryOptions,
   serverOptions: ServerOptions,
@@ -118,7 +119,7 @@ const loadServerRows = (
   if (maxDelay < minDelay) {
     throw new Error('serverOptions.minDelay is larger than serverOptions.maxDelay ');
   }
-  const delay = Math.random() * (maxDelay - minDelay) + minDelay;
+  const delay = randomInt(minDelay, maxDelay);
 
   const { cursor, page = 0, pageSize } = queryOptions;
 
@@ -170,11 +171,13 @@ interface PageInfo {
   pageSize?: number;
 }
 
-export interface ServerOptions {
+interface DefaultServerOptions {
   minDelay: number;
   maxDelay: number;
   useCursorPagination?: boolean;
 }
+
+type ServerOptions = Partial<DefaultServerOptions>;
 
 export interface QueryOptions {
   cursor?: GridRowId;
@@ -183,6 +186,8 @@ export interface QueryOptions {
   // TODO: implement the behavior liked to following models
   filterModel?: GridFilterModel;
   sortModel?: GridSortModel;
+  firstRowToRender?: number;
+  lastRowToRender?: number;
 }
 
 const DEFAULT_DATASET_OPTIONS: UseDemoDataOptions = {
@@ -191,15 +196,18 @@ const DEFAULT_DATASET_OPTIONS: UseDemoDataOptions = {
   maxColumns: 6,
 };
 
-const DEFAULT_SERVER_OPTIONS: ServerOptions = {
-  minDelay: 100,
-  maxDelay: 300,
+declare const DISABLE_CHANCE_RANDOM: any;
+const disableDelay = typeof DISABLE_CHANCE_RANDOM !== 'undefined' && DISABLE_CHANCE_RANDOM;
+
+const DEFAULT_SERVER_OPTIONS: DefaultServerOptions = {
+  minDelay: disableDelay ? 0 : 100,
+  maxDelay: disableDelay ? 0 : 300,
   useCursorPagination: true,
 };
 
 export const createFakeServer = (
   dataSetOptions?: Partial<UseDemoDataOptions>,
-  serverOptions?: Partial<ServerOptions>,
+  serverOptions?: ServerOptions,
 ) => {
   const dataSetOptionsWithDefault = { ...DEFAULT_DATASET_OPTIONS, ...dataSetOptions };
   const serverOptionsWithDefault = { ...DEFAULT_SERVER_OPTIONS, ...serverOptions };
@@ -222,8 +230,8 @@ export const createFakeServer = (
     const queryOptionsRef = React.useRef(queryOptions);
     const [response, setResponse] = React.useState<{
       pageInfo: PageInfo;
-      data: GridRowModel[];
-    }>({ pageInfo: {}, data: [] });
+      rows: GridRowModel[];
+    }>({ pageInfo: {}, rows: [] });
     const [isLoading, setIsLoading] = React.useState<boolean>(dataGenerationIsLoading);
 
     React.useEffect(() => {
@@ -251,7 +259,7 @@ export const createFakeServer = (
           return;
         }
         const newRep = {
-          data: returnedRows,
+          rows: returnedRows,
           pageInfo: {
             totalRowCount,
             nextCursor,
@@ -276,5 +284,5 @@ export const createFakeServer = (
     };
   };
 
-  return { columns, initialState, useQuery };
+  return { columns, columnsWithDefaultColDef, initialState, useQuery };
 };

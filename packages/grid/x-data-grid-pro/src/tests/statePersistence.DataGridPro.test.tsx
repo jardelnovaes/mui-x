@@ -2,6 +2,7 @@ import * as React from 'react';
 import {
   DataGridPro,
   DataGridProProps,
+  getDefaultGridFilterModel,
   GridApi,
   GridColDef,
   GridInitialState,
@@ -9,14 +10,13 @@ import {
   GridRowsProp,
   useGridApiRef,
 } from '@mui/x-data-grid-pro';
-// @ts-ignore Remove once the test utils are typed
-import { createRenderer, screen } from '@mui/monorepo/test/utils';
+import { createRenderer, screen, act } from '@mui-internal/test-utils';
 import { expect } from 'chai';
 import {
   getColumnHeaderCell,
   getColumnHeadersTextContent,
   getColumnValues,
-} from '../../../../../test/utils/helperFn';
+} from 'test/utils/helperFn';
 
 const isJSDOM = /jsdom/.test(window.navigator.userAgent);
 
@@ -59,12 +59,11 @@ const FULL_INITIAL_STATE: GridInitialState = {
   },
   filter: {
     filterModel: {
-      items: [{ columnField: 'id', operatorValue: '<', value: '5' }],
+      items: [{ field: 'id', operator: '<', value: '5' }],
     },
   },
   pagination: {
-    page: 1,
-    pageSize: 2,
+    paginationModel: { page: 1, pageSize: 2 },
   },
   pinnedColumns: {
     left: ['id'],
@@ -72,18 +71,20 @@ const FULL_INITIAL_STATE: GridInitialState = {
   preferencePanel: {
     open: true,
     openedPanelValue: GridPreferencePanelsValue.filters,
+    panelId: undefined,
+    labelId: undefined,
   },
   sorting: {
     sortModel: [{ field: 'id', sort: 'desc' }],
   },
 };
 
-describe('<DataGridPro /> - State Persistence', () => {
+describe('<DataGridPro /> - State persistence', () => {
   const { render, clock } = createRenderer({ clock: 'fake' });
 
   let apiRef: React.MutableRefObject<GridApi>;
 
-  const TestCase = (props: Omit<DataGridProProps, 'rows' | 'columns' | 'apiRef'>) => {
+  function TestCase(props: Omit<DataGridProProps, 'rows' | 'columns' | 'apiRef'>) {
     apiRef = useGridApiRef();
 
     return (
@@ -95,7 +96,7 @@ describe('<DataGridPro /> - State Persistence', () => {
           autoHeight={isJSDOM}
           apiRef={apiRef}
           disableVirtualization
-          rowsPerPageOptions={[100, 2]}
+          pageSizeOptions={[100, 2]}
           {...props}
           initialState={{
             ...props.initialState,
@@ -109,14 +110,35 @@ describe('<DataGridPro /> - State Persistence', () => {
         />
       </div>
     );
-  };
+  }
 
   describe('apiRef: exportState', () => {
-    // We always export the `orderedFields`,
-    // If it's something problematic we could introduce an `hasBeenReordered` property and only export if at least one column has been reordered.
-    it('should not return the default values of the models', () => {
+    it('should export the default values of the models', () => {
       render(<TestCase />);
       expect(apiRef.current.exportState()).to.deep.equal({
+        columns: {
+          columnVisibilityModel: {},
+          orderedFields: ['id', 'idBis', 'category'],
+        },
+        filter: {
+          filterModel: getDefaultGridFilterModel(),
+        },
+        pagination: {
+          paginationModel: { page: 0, pageSize: 100 },
+        },
+        pinnedColumns: {},
+        preferencePanel: {
+          open: false,
+        },
+        sorting: {
+          sortModel: [],
+        },
+      });
+    });
+
+    it('should not export the default values of the models when using exportOnlyDirtyModels', () => {
+      render(<TestCase />);
+      expect(apiRef.current.exportState({ exportOnlyDirtyModels: true })).to.deep.equal({
         columns: {
           orderedFields: ['id', 'idBis', 'category'],
         },
@@ -128,19 +150,77 @@ describe('<DataGridPro /> - State Persistence', () => {
       expect(apiRef.current.exportState()).to.deep.equal(FULL_INITIAL_STATE);
     });
 
+    it('should export the controlled values of the models', () => {
+      render(
+        <TestCase
+          filterModel={FULL_INITIAL_STATE.filter?.filterModel}
+          sortModel={FULL_INITIAL_STATE.sorting?.sortModel}
+          columnVisibilityModel={FULL_INITIAL_STATE.columns?.columnVisibilityModel}
+          paginationModel={{
+            page: FULL_INITIAL_STATE.pagination?.paginationModel?.page!,
+            pageSize: FULL_INITIAL_STATE.pagination?.paginationModel?.pageSize!,
+          }}
+          pinnedColumns={FULL_INITIAL_STATE.pinnedColumns}
+          // Some portable states don't have a controllable model
+          initialState={{
+            columns: {
+              orderedFields: FULL_INITIAL_STATE.columns?.orderedFields,
+              dimensions: FULL_INITIAL_STATE.columns?.dimensions,
+            },
+            preferencePanel: FULL_INITIAL_STATE.preferencePanel,
+          }}
+        />,
+      );
+      expect(apiRef.current.exportState()).to.deep.equal(FULL_INITIAL_STATE);
+    });
+
+    it('should export the controlled values of the models when using exportOnlyDirtyModels', () => {
+      render(
+        <TestCase
+          filterModel={FULL_INITIAL_STATE.filter?.filterModel}
+          sortModel={FULL_INITIAL_STATE.sorting?.sortModel}
+          columnVisibilityModel={FULL_INITIAL_STATE.columns?.columnVisibilityModel}
+          paginationModel={{
+            page: FULL_INITIAL_STATE.pagination?.paginationModel?.page!,
+            pageSize: FULL_INITIAL_STATE.pagination?.paginationModel?.pageSize!,
+          }}
+          pinnedColumns={FULL_INITIAL_STATE.pinnedColumns}
+          // Some portable states don't have a controllable model
+          initialState={{
+            columns: {
+              orderedFields: FULL_INITIAL_STATE.columns?.orderedFields,
+              dimensions: FULL_INITIAL_STATE.columns?.dimensions,
+            },
+            preferencePanel: FULL_INITIAL_STATE.preferencePanel,
+          }}
+        />,
+      );
+      expect(apiRef.current.exportState({ exportOnlyDirtyModels: true })).to.deep.equal(
+        FULL_INITIAL_STATE,
+      );
+    });
+
+    it('should export the initial values of the models when using exportOnlyUserModels', () => {
+      render(<TestCase initialState={FULL_INITIAL_STATE} />);
+      expect(apiRef.current.exportState({ exportOnlyDirtyModels: true })).to.deep.equal(
+        FULL_INITIAL_STATE,
+      );
+    });
+
     it('should export the current version of the exportable state', () => {
       render(<TestCase />);
-      apiRef.current.setPageSize(2);
-      apiRef.current.setPage(1);
-      apiRef.current.setPinnedColumns({ left: ['id'] });
-      apiRef.current.showPreferences(GridPreferencePanelsValue.filters);
-      apiRef.current.setSortModel([{ field: 'id', sort: 'desc' }]);
-      apiRef.current.setFilterModel({
-        items: [{ columnField: 'id', operatorValue: '<', value: '5' }],
+      act(() => {
+        apiRef.current.setPaginationModel({ page: 1, pageSize: 2 });
+        apiRef.current.setPinnedColumns({ left: ['id'] });
+        apiRef.current.showPreferences(GridPreferencePanelsValue.filters);
+        apiRef.current.setSortModel([{ field: 'id', sort: 'desc' }]);
+        apiRef.current.setFilterModel({
+          items: [{ field: 'id', operator: '<', value: '5' }],
+        });
+        apiRef.current.setColumnIndex('category', 1);
+        apiRef.current.setColumnWidth('category', 75);
+        apiRef.current.setColumnVisibilityModel({ idBis: false });
       });
-      apiRef.current.setColumnIndex('category', 1);
-      apiRef.current.setColumnWidth('category', 75);
-      apiRef.current.setColumnVisibilityModel({ idBis: false });
       expect(apiRef.current.exportState()).to.deep.equal(FULL_INITIAL_STATE);
     });
   });
@@ -149,7 +229,7 @@ describe('<DataGridPro /> - State Persistence', () => {
     it('should restore the whole exportable state', () => {
       render(<TestCase />);
 
-      apiRef.current.restoreState(FULL_INITIAL_STATE);
+      act(() => apiRef.current.restoreState(FULL_INITIAL_STATE));
 
       // Pinning, pagination, sorting and filtering
       expect(getColumnValues(0)).to.deep.equal(['2', '1']);
@@ -167,77 +247,40 @@ describe('<DataGridPro /> - State Persistence', () => {
     it('should restore partial exportable state', () => {
       render(<TestCase />);
 
-      apiRef.current.restoreState({
-        pagination: {
-          page: 1,
-          pageSize: 2,
-        },
-      });
+      act(() =>
+        apiRef.current.restoreState({
+          pagination: {
+            paginationModel: { page: 1, pageSize: 2 },
+          },
+        }),
+      );
 
       expect(getColumnValues(0)).to.deep.equal(['2', '3']);
     });
 
     it('should restore controlled sub-state', () => {
-      const ControlledTest = () => {
-        const [page, setPage] = React.useState(0);
+      function ControlledTest() {
+        const [paginationModel, setPaginationModel] = React.useState({ page: 0, pageSize: 5 });
 
         return (
           <TestCase
-            page={page}
-            onPageChange={(newPage) => {
-              setPage(newPage);
-            }}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pageSizeOptions={[2, 5]}
           />
         );
-      };
+      }
 
       render(<ControlledTest />);
-      apiRef.current.restoreState({
-        pagination: {
-          page: 1,
-          pageSize: 2,
-        },
-      });
+      act(() =>
+        apiRef.current.restoreState({
+          pagination: {
+            paginationModel: { page: 1, pageSize: 2 },
+          },
+        }),
+      );
       clock.runToLast();
       expect(getColumnValues(0)).to.deep.equal(['2', '3']);
-    });
-
-    it('should not restore the column visibility model when using the legacy column visibility', () => {
-      const TestCaseLegacyColumnVisibility = () => {
-        apiRef = useGridApiRef();
-
-        return (
-          <div style={{ width: 300, height: 300 }}>
-            <DataGridPro
-              rows={rows}
-              columns={[
-                {
-                  field: 'id',
-                  hide: true,
-                },
-                {
-                  field: 'category',
-                },
-              ]}
-              autoHeight={isJSDOM}
-              apiRef={apiRef}
-              disableVirtualization
-            />
-          </div>
-        );
-      };
-
-      render(<TestCaseLegacyColumnVisibility />);
-
-      apiRef.current.restoreState({
-        columns: {
-          columnVisibilityModel: {
-            category: false,
-          },
-        },
-      });
-
-      expect(getColumnHeadersTextContent()).to.deep.equal(['category']);
     });
   });
 });

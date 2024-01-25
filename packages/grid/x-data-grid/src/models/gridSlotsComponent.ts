@@ -1,16 +1,23 @@
 import * as React from 'react';
-import { GridIconSlotsComponent } from './gridIconSlotsComponent';
+import type { UncapitalizeObjectKeys } from '../internals/utils';
+import type { GridIconSlotsComponent } from './gridIconSlotsComponent';
 
-/**
- * Grid components React prop interface containing all the overridable components.
- * TODO: Differentiate community and pro interface
- */
-export interface GridSlotsComponent extends GridIconSlotsComponent {
+export interface GridBaseSlots {
   /**
    * The custom Checkbox component used in the grid for both header and cells.
    * @default Checkbox
    */
   BaseCheckbox: React.JSXElementConstructor<any>;
+  /**
+   * The custom Chip component used in the grid.
+   * @default Chip
+   */
+  BaseChip: React.JSXElementConstructor<any>;
+  /**
+   * The custom InputAdornment component used in the grid.
+   * @default InputAdornment
+   */
+  BaseInputAdornment: React.JSXElementConstructor<any>;
   /**
    * The custom TextField component used in the grid.
    * @default TextField
@@ -37,6 +44,11 @@ export interface GridSlotsComponent extends GridIconSlotsComponent {
    */
   BaseButton: React.JSXElementConstructor<any>;
   /**
+   * The custom IconButton component used in the grid.
+   * @default IconButton
+   */
+  BaseIconButton: React.JSXElementConstructor<any>;
+  /**
    * The custom Tooltip component used in the grid.
    * @default Tooltip
    */
@@ -47,10 +59,38 @@ export interface GridSlotsComponent extends GridIconSlotsComponent {
    */
   BasePopper: React.JSXElementConstructor<any>;
   /**
+   * The custom InputLabel component used in the grid.
+   * @default InputLabel
+   */
+  BaseInputLabel: React.JSXElementConstructor<any>;
+  /**
+   * The custom SelectOption component used in the grid.
+   * @default MenuItem
+   */
+  BaseSelectOption: React.JSXElementConstructor<any>;
+}
+
+// TODO v7: camelCase GridSlotsComponent, the `componenets` prop is going away.
+
+/**
+ * Grid components React prop interface containing all the overridable components.
+ */
+export interface GridSlotsComponent extends GridBaseSlots, GridIconSlotsComponent {
+  /**
+   * The custom Chip component used in the grid.
+   * @default Chip
+   */
+  BaseChip: React.JSXElementConstructor<any>;
+  /**
    * Component rendered for each cell.
    * @default GridCell
    */
   Cell: React.JSXElementConstructor<any>;
+  /**
+   * Component rendered for each skeleton cell.
+   * @default GridSkeletonCell
+   */
+  SkeletonCell: React.JSXElementConstructor<any>;
   /**
    * Filter icon component rendered in each column header.
    * @default GridColumnHeaderFilterIconButton
@@ -62,21 +102,20 @@ export interface GridSlotsComponent extends GridIconSlotsComponent {
    */
   ColumnMenu: React.JSXElementConstructor<any>;
   /**
-   * Error overlay component rendered above the grid when an error is caught.
-   * @default ErrorOverlay
+   * Component responsible for rendering the column headers.
+   * @default DataGridColumnHeaders
    */
-  ErrorOverlay: React.JSXElementConstructor<any>;
+  ColumnHeaders: React.JSXElementConstructor<any>;
   /**
    * Footer component rendered at the bottom of the grid viewport.
    * @default GridFooter
    */
   Footer: React.JSXElementConstructor<any>;
   /**
-   * Header component rendered above the grid column header bar.
-   * Prefer using the `Toolbar` slot. You should never need to use this slot.
-   * @default GridHeader
+   * Row count component rendered in the footer
+   * @default GridRowCount
    */
-  Header: React.JSXElementConstructor<any>; // TODO remove.
+  FooterRowCount: React.JSXElementConstructor<any>;
   /**
    * Toolbar component rendered inside the Header component.
    * @default null
@@ -128,3 +167,6 @@ export interface GridSlotsComponent extends GridIconSlotsComponent {
    */
   Row: React.JSXElementConstructor<any>;
 }
+
+export interface UncapitalizedGridSlotsComponent
+  extends UncapitalizeObjectKeys<GridSlotsComponent> {}

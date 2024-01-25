@@ -1,13 +1,10 @@
 import * as React from 'react';
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { describeConformance, fireEvent, screen } from '@mui/monorepo/test/utils';
+import { describeConformance, fireEvent, screen } from '@mui-internal/test-utils';
+import ButtonBase from '@mui/material/ButtonBase';
 import { PickersDay, pickersDayClasses as classes } from '@mui/x-date-pickers/PickersDay';
-import {
-  adapterToUse,
-  wrapPickerMount,
-  createPickerRenderer,
-} from '../../../../test/utils/pickers-utils';
+import { adapterToUse, wrapPickerMount, createPickerRenderer } from 'test/utils/pickers';
 
 describe('<PickersDay />', () => {
   const { render } = createPickerRenderer();
@@ -16,12 +13,14 @@ describe('<PickersDay />', () => {
     <PickersDay
       day={adapterToUse.date()}
       outsideCurrentMonth={false}
+      isFirstVisibleCell={false}
+      isLastVisibleCell={false}
       selected
       onDaySelect={() => {}}
     />,
     () => ({
       classes,
-      inheritComponent: 'button',
+      inheritComponent: ButtonBase,
       render,
       wrapMount: wrapPickerMount,
       muiName: 'MuiPickersDay',
@@ -35,10 +34,16 @@ describe('<PickersDay />', () => {
   it('selects the date on click, Enter and Space', () => {
     const handleDaySelect = spy();
     const day = adapterToUse.date();
-    render(<PickersDay day={day} outsideCurrentMonth={false} onDaySelect={handleDaySelect} />);
-    const targetDay = screen.getByRole('button', {
-      name: `${adapterToUse.format(day, 'fullDate')}`,
-    });
+    render(
+      <PickersDay
+        day={day}
+        outsideCurrentMonth={false}
+        isFirstVisibleCell={false}
+        isLastVisibleCell={false}
+        onDaySelect={handleDaySelect}
+      />,
+    );
+    const targetDay = screen.getByRole('button', { name: adapterToUse.format(day, 'dayOfMonth') });
 
     // A native button implies Enter and Space keydown behavior
     // These keydown events only trigger click behavior if they're trusted (programmatically dispatched events aren't trusted).
@@ -59,14 +64,14 @@ describe('<PickersDay />', () => {
         day={adapterToUse.date('2020-02-02T02:02:02.000')}
         onDaySelect={() => {}}
         outsideCurrentMonth={false}
+        isFirstVisibleCell={false}
+        isLastVisibleCell={false}
       />,
     );
 
     const day = screen.getByRole('button');
-    // TODO: This can be disorienting if the accessible name is not the same as the visible label
-    // Investigate if we can drop `aria-label` and let screenreaders announce the full date in a calendar picker.
     expect(day).to.have.text('2');
-    expect(day).toHaveAccessibleName('Feb 2, 2020');
+    expect(day).toHaveAccessibleName('2');
   });
 
   it('should render children instead of the day of the month when children prop is present', () => {
@@ -74,6 +79,8 @@ describe('<PickersDay />', () => {
       <PickersDay
         day={adapterToUse.date('2020-02-02T02:02:02.000')}
         outsideCurrentMonth={false}
+        isFirstVisibleCell={false}
+        isLastVisibleCell={false}
         onDaySelect={() => {}}
       >
         2 (free)

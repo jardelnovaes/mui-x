@@ -2,6 +2,9 @@
 
 ## Release
 
+> Tip: For people who are doing the release for the first time, make sure you sign in to NPM from the command line using security-key flow as well as have two-factor authentication enabled.
+> You can follow [this guide](https://docs.npmjs.com/accessing-npm-using-2fa) for more information on how to set it up.
+
 > Tip: You can copy raw markdown checklist below to the release Pull Request and follow it step by step marking completed items.
 
 A typical release goes like this:
@@ -26,8 +29,7 @@ The following steps must be proposed as a pull request.
 
 - [ ] Clean the generated changelog, to match the format of [https://github.com/mui/mui-x/releases](https://github.com/mui/mui-x/releases).
 - [ ] Update the root `package.json`'s version
-- [ ] Update the versions of the other `package.json` files and of the dependencies with `yarn release:version`.
-- [ ] Fix manually the package version in `x-date-pickers/package.json` and `x-date-pickers-pro/package.json`.
+- [ ] Update the versions of the other `package.json` files and of the dependencies with `yarn release:version` (`yarn release:version prerelease` for alpha / beta releases).
 - [ ] Open PR with changes and wait for review and green CI.
 - [ ] Merge PR once CI is green, and it has been approved.
 
@@ -37,7 +39,7 @@ The following steps must be proposed as a pull request.
 - [ ] Make sure you have the latest dependencies installed: `yarn`.
 - [ ] Build the packages: `yarn release:build`.
 - [ ] Release the versions on npm: `yarn release:publish` (you need your 2FA device).
-- [ ] Create a new tag named with the release you just did `git tag -a v4.0.0-alpha.30 -m "Version 4.0.0-alpha.30" && git push upstream --tag`
+- [ ] Push the newly created tag: `yarn release:tag`.
 
 ### Publish the documentation
 
@@ -45,12 +47,14 @@ The documentation must be updated on the `docs-vX` branch (`docs-v4` for `v4.X` 
 
 - [ ] Push the working branch on the documentation release branch to deploy the documentation with the latest changes.
 
-```sh
-git push upstream master:docs-v5 -f
+<!-- #default-branch-switch -->
+
+```bash
+git push upstream master:docs-v6 -f
 ```
 
-You can follow the deployment process [on the Netlify Dashboard](https://app.netlify.com/sites/material-ui-x/deploys?filter=docs-v5)
-Once deployed, it will be accessible at https://material-ui-x.netlify.app/ for the `docs-v5` deployment.
+You can follow the deployment process [on the Netlify Dashboard](https://app.netlify.com/sites/material-ui-x/deploys?filter=docs-v6)
+Once deployed, it will be accessible at https://material-ui-x.netlify.app/ for the `docs-v6` deployment.
 
 ### Publish GitHub release
 
@@ -60,9 +64,11 @@ Once deployed, it will be accessible at https://material-ui-x.netlify.app/ for t
 
 - [ ] Follow the instructions in https://mui-org.notion.site/Releases-7490ef9581b4447ebdbf86b13164272d.
 
-## Manual changelog generation
+## A script failed, what can I do?
 
-1. Compare the last tag with the branch upon which you want to release (`next` for the alpha / beta releases and `master` for the current stable version).
+### Manual changelog generation
+
+Compare the last tag with the branch upon which you want to release (`next` for the alpha / beta releases and `master` for the current stable version).
 
 For instance: [https://github.com/mui/mui-x/compare/v4.0.0-alpha.9...master](https://github.com/mui/mui-x/compare/v4.0.0-alpha.9...master) (if you want to release `master` and the last tag is `v4.0.0-alpha.9`)
 You can use the following script in your browser console on any GitHub page to automatically navigate to the page comparing `master` with the last tag.
@@ -77,3 +83,7 @@ You can use the following script in your browser console on any GitHub page to a
   window.location.href = diffPage;
 })();
 ```
+
+### Manually create the release tag
+
+If the `yarn release:tag` fails you can create and push the tag using the following command: `git tag -a v4.0.0-alpha.30 -m "Version 4.0.0-alpha.30" && git push upstream --tag`.

@@ -1,5 +1,4 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -73,17 +72,6 @@ function CustomDetailPanelToggle(props) {
     </IconButton>
   );
 }
-
-CustomDetailPanelToggle.propTypes = {
-  /**
-   * The grid row id.
-   */
-  id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-  /**
-   * The cell value, but if the column has valueGetter, use getValue.
-   */
-  value: PropTypes.any,
-};
 
 const columns = [
   { field: 'id', headerName: 'Order ID' },

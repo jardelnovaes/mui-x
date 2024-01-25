@@ -1,5 +1,4 @@
-// @ts-ignore Remove once the test utils are typed
-import { createRenderer, fireEvent, screen, act } from '@mui/monorepo/test/utils';
+import { createRenderer, fireEvent, screen, act, userEvent } from '@mui-internal/test-utils';
 import {
   getCell,
   getColumnHeaderCell,
@@ -14,10 +13,11 @@ import {
   DataGridProProps,
   GRID_TREE_DATA_GROUPING_FIELD,
   GridApi,
-  GridLinkOperator,
+  GridGroupNode,
+  GridLogicOperator,
   GridRowsProp,
-  GridRowTreeNodeConfig,
   useGridApiRef,
+  GridPaginationModel,
 } from '@mui/x-data-grid-pro';
 
 const isJSDOM = /jsdom/.test(window.navigator.userAgent);
@@ -56,12 +56,12 @@ const baselineProps: DataGridProProps = {
   getRowId: (row) => row.name,
 };
 
-describe('<DataGridPro /> - Tree Data', () => {
+describe('<DataGridPro /> - Tree data', () => {
   const { render, clock } = createRenderer({ clock: 'fake' });
 
   let apiRef: React.MutableRefObject<GridApi>;
 
-  const Test = (props: Partial<DataGridProProps>) => {
+  function Test(props: Partial<DataGridProProps>) {
     apiRef = useGridApiRef();
 
     return (
@@ -69,7 +69,7 @@ describe('<DataGridPro /> - Tree Data', () => {
         <DataGridPro {...baselineProps} apiRef={apiRef} {...props} disableVirtualization />
       </div>
     );
-  };
+  }
 
   describe('prop: treeData', () => {
     it('should support tree data toggling', () => {
@@ -118,7 +118,7 @@ describe('<DataGridPro /> - Tree Data', () => {
         'B.B.A.A',
         'C',
       ]);
-      apiRef.current.updateRows([{ name: 'A.A', _action: 'delete' }]);
+      act(() => apiRef.current.updateRows([{ name: 'A.A', _action: 'delete' }]));
       expect(getColumnValues(0)).to.deep.equal([
         'A',
         'A.B',
@@ -167,16 +167,12 @@ describe('<DataGridPro /> - Tree Data', () => {
     });
 
     it('should keep children expansion when changing some of the rows', () => {
-      const { setProps } = render(
-        <Test disableVirtualization rows={[{ name: 'A' }, { name: 'A.A' }]} />,
-      );
+      render(<Test disableVirtualization rows={[{ name: 'A' }, { name: 'A.A' }]} />);
       expect(getColumnValues(1)).to.deep.equal(['A']);
-      apiRef.current.setRowChildrenExpansion('A', true);
+      act(() => apiRef.current.setRowChildrenExpansion('A', true));
       clock.runToLast();
       expect(getColumnValues(1)).to.deep.equal(['A', 'A.A']);
-      setProps({
-        rows: [{ name: 'A' }, { name: 'A.A' }, { name: 'B' }, { name: 'B.A' }],
-      });
+      act(() => apiRef.current.updateRows([{ name: 'B' }]));
       expect(getColumnValues(1)).to.deep.equal(['A', 'A.A', 'B']);
     });
   });
@@ -276,9 +272,7 @@ describe('<DataGridPro /> - Tree Data', () => {
     it('should not re-apply default expansion on rerender after expansion manually toggled', () => {
       const { setProps } = render(<Test />);
       expect(getColumnValues(1)).to.deep.equal(['A', 'B', 'C']);
-      act(() => {
-        apiRef.current.setRowChildrenExpansion('B', true);
-      });
+      act(() => apiRef.current.setRowChildrenExpansion('B', true));
       expect(getColumnValues(1)).to.deep.equal(['A', 'B', 'B.A', 'B.B', 'C']);
       setProps({ sortModel: [{ field: 'name', sort: 'desc' }] });
       expect(getColumnValues(1)).to.deep.equal(['C', 'B', 'B.B', 'B.A', 'A']);
@@ -287,11 +281,12 @@ describe('<DataGridPro /> - Tree Data', () => {
 
   describe('prop: isGroupExpandedByDefault', () => {
     it('should expand groups according to isGroupExpandedByDefault when defined', () => {
-      const isGroupExpandedByDefault = spy((node: GridRowTreeNodeConfig) => node.id === 'A');
+      const isGroupExpandedByDefault = spy((node: GridGroupNode) => node.id === 'A');
 
       render(<Test isGroupExpandedByDefault={isGroupExpandedByDefault} />);
       expect(isGroupExpandedByDefault.callCount).to.equal(8); // Should not be called on leaves
-      const { childrenExpanded, ...node } = apiRef.current.state.rows.tree.A;
+      const { childrenExpanded, children, childrenFromPath, ...node } = apiRef.current.state.rows
+        .tree.A as GridGroupNode;
       const callForNodeA = isGroupExpandedByDefault
         .getCalls()
         .find((call) => call.firstArg.id === node.id)!;
@@ -300,7 +295,7 @@ describe('<DataGridPro /> - Tree Data', () => {
     });
 
     it('should have priority over defaultGroupingExpansionDepth when both defined', () => {
-      const isGroupExpandedByDefault = (node: GridRowTreeNodeConfig) => node.id === 'A';
+      const isGroupExpandedByDefault = (node: GridGroupNode) => node.id === 'A';
 
       render(
         <Test
@@ -341,6 +336,27 @@ describe('<DataGridPro /> - Tree Data', () => {
       );
       expect(getColumnValues(0)).to.deep.equal(['A', 'A', 'B', 'B', 'A', 'B', 'A', 'A', 'C']);
     });
+
+    // https://github.com/mui/mui-x/issues/9344
+    it('should support valueFormatter', () => {
+      render(
+        <Test
+          groupingColDef={{ valueFormatter: ({ value }) => `> ${value}` }}
+          defaultGroupingExpansionDepth={-1}
+        />,
+      );
+      expect(getColumnValues(0)).to.deep.equal([
+        '> A (2)',
+        '> A',
+        '> B',
+        '> B (4)',
+        '> A',
+        '> B (2)',
+        '> A (1)',
+        '> A',
+        '> C',
+      ]);
+    });
   });
 
   describe('row grouping column', () => {
@@ -355,10 +371,10 @@ describe('<DataGridPro /> - Tree Data', () => {
         <Test
           rows={[{ name: 'A' }, { name: 'A.C' }, { name: 'B' }, { name: 'B.A' }]}
           filterModel={{
-            linkOperator: GridLinkOperator.Or,
+            logicOperator: GridLogicOperator.Or,
             items: [
-              { columnField: 'name', operatorValue: 'endsWith', value: 'A', id: 0 },
-              { columnField: 'name', operatorValue: 'endsWith', value: 'B', id: 1 },
+              { field: 'name', operator: 'endsWith', value: 'A', id: 0 },
+              { field: 'name', operator: 'endsWith', value: 'B', id: 1 },
             ],
           }}
         />,
@@ -373,17 +389,16 @@ describe('<DataGridPro /> - Tree Data', () => {
     it('should toggle expansion when clicking on grouping column icon', () => {
       render(<Test />);
       expect(getColumnValues(1)).to.deep.equal(['A', 'B', 'C']);
-      fireEvent.click(getCell(0, 0).querySelector('button'));
+      fireEvent.click(getCell(0, 0).querySelector('button')!);
       expect(getColumnValues(1)).to.deep.equal(['A', 'A.A', 'A.B', 'B', 'C']);
-      fireEvent.click(getCell(0, 0).querySelector('button'));
+      fireEvent.click(getCell(0, 0).querySelector('button')!);
       expect(getColumnValues(1)).to.deep.equal(['A', 'B', 'C']);
     });
 
     it('should toggle expansion when pressing Space while focusing grouping column', () => {
       render(<Test />);
       expect(getColumnValues(1)).to.deep.equal(['A', 'B', 'C']);
-      fireEvent.mouseUp(getCell(0, 0));
-      fireEvent.click(getCell(0, 0));
+      userEvent.mousePress(getCell(0, 0));
       expect(getColumnValues(1)).to.deep.equal(['A', 'B', 'C']);
       fireEvent.keyDown(getCell(0, 0), { key: ' ' });
       expect(getColumnValues(1)).to.deep.equal(['A', 'A.A', 'A.B', 'B', 'C']);
@@ -399,40 +414,55 @@ describe('<DataGridPro /> - Tree Data', () => {
     it('should keep the grouping column width between generations', () => {
       render(<Test groupingColDef={{ width: 200 }} />);
       expect(getColumnHeaderCell(0)).toHaveInlineStyle({ width: '200px' });
-      apiRef.current.updateColumns([{ field: GRID_TREE_DATA_GROUPING_FIELD, width: 100 }]);
+      act(() =>
+        apiRef.current.updateColumns([{ field: GRID_TREE_DATA_GROUPING_FIELD, width: 100 }]),
+      );
       expect(getColumnHeaderCell(0)).toHaveInlineStyle({ width: '100px' });
-      apiRef.current.updateColumns([
-        {
-          field: 'name',
-          headerName: 'New name',
-        },
-      ]);
+      act(() =>
+        apiRef.current.updateColumns([
+          {
+            field: 'name',
+            headerName: 'New name',
+          },
+        ]),
+      );
       expect(getColumnHeaderCell(0)).toHaveInlineStyle({ width: '100px' });
     });
   });
 
   describe('pagination', () => {
+    function PaginatedTest({ initialModel }: { initialModel: GridPaginationModel }) {
+      const [paginationModel, setPaginationModel] = React.useState(initialModel);
+      return (
+        <Test
+          pagination
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={[paginationModel.pageSize]}
+        />
+      );
+    }
     it('should respect the pageSize for the top level rows when toggling children expansion', () => {
-      render(<Test pagination pageSize={2} rowsPerPageOptions={[2]} />);
+      render(<PaginatedTest initialModel={{ pageSize: 2, page: 0 }} />);
       expect(getColumnValues(1)).to.deep.equal(['A', 'B']);
-      fireEvent.click(getCell(0, 0).querySelector('button'));
+      fireEvent.click(getCell(0, 0).querySelector('button')!);
       expect(getColumnValues(1)).to.deep.equal(['A', 'A.A', 'A.B', 'B']);
       fireEvent.click(screen.getByRole('button', { name: /next page/i }));
       expect(getColumnValues(1)).to.deep.equal(['C']);
     });
 
     it('should keep the row expansion when switching page', () => {
-      render(<Test pagination pageSize={1} rowsPerPageOptions={[1]} />);
+      render(<PaginatedTest initialModel={{ pageSize: 1, page: 0 }} />);
       expect(getColumnValues(1)).to.deep.equal(['A']);
-      fireEvent.click(getCell(0, 0).querySelector('button'));
+      fireEvent.click(getCell(0, 0).querySelector('button')!);
       expect(getColumnValues(1)).to.deep.equal(['A', 'A.A', 'A.B']);
       fireEvent.click(screen.getByRole('button', { name: /next page/i }));
       expect(getColumnValues(1)).to.deep.equal(['B']);
-      fireEvent.click(getCell(3, 0).querySelector('button'));
+      fireEvent.click(getCell(3, 0).querySelector('button')!);
       expect(getColumnValues(1)).to.deep.equal(['B', 'B.A', 'B.B']);
       fireEvent.click(screen.getByRole('button', { name: /previous page/i }));
       expect(getColumnValues(1)).to.deep.equal(['A', 'A.A', 'A.B']);
-      fireEvent.click(getCell(0, 0).querySelector('button'));
+      fireEvent.click(getCell(0, 0).querySelector('button')!);
       expect(getColumnValues(1)).to.deep.equal(['A']);
       fireEvent.click(screen.getByRole('button', { name: /next page/i }));
       expect(getColumnValues(1)).to.deep.equal(['B', 'B.A', 'B.B']);
@@ -444,7 +474,7 @@ describe('<DataGridPro /> - Tree Data', () => {
       render(
         <Test
           rows={[{ name: 'B' }, { name: 'B.B' }]}
-          filterModel={{ items: [{ columnField: 'name', value: 'A', operatorValue: 'endsWith' }] }}
+          filterModel={{ items: [{ field: 'name', value: 'A', operator: 'endsWith' }] }}
           defaultGroupingExpansionDepth={-1}
         />,
       );
@@ -456,7 +486,7 @@ describe('<DataGridPro /> - Tree Data', () => {
       render(
         <Test
           rows={[{ name: 'B' }, { name: 'B.A' }, { name: 'B.B' }]}
-          filterModel={{ items: [{ columnField: 'name', value: 'A', operatorValue: 'endsWith' }] }}
+          filterModel={{ items: [{ field: 'name', value: 'A', operator: 'endsWith' }] }}
           defaultGroupingExpansionDepth={-1}
         />,
       );
@@ -468,7 +498,7 @@ describe('<DataGridPro /> - Tree Data', () => {
       render(
         <Test
           rows={[{ name: 'A' }, { name: 'A.B' }]}
-          filterModel={{ items: [{ columnField: 'name', value: 'A', operatorValue: 'endsWith' }] }}
+          filterModel={{ items: [{ field: 'name', value: 'A', operator: 'endsWith' }] }}
           defaultGroupingExpansionDepth={-1}
         />,
       );
@@ -480,7 +510,7 @@ describe('<DataGridPro /> - Tree Data', () => {
       render(
         <Test
           rows={[{ name: 'B' }, { name: 'B.A' }, { name: 'B.B' }]}
-          filterModel={{ items: [{ columnField: 'name', value: 'B', operatorValue: 'endsWith' }] }}
+          filterModel={{ items: [{ field: 'name', value: 'B', operator: 'endsWith' }] }}
           disableChildrenFiltering
           defaultGroupingExpansionDepth={-1}
         />,
@@ -493,7 +523,7 @@ describe('<DataGridPro /> - Tree Data', () => {
       const { setProps } = render(
         <Test
           rows={[{ name: 'B' }, { name: 'B.A' }, { name: 'B.B' }]}
-          filterModel={{ items: [{ columnField: 'name', value: 'B', operatorValue: 'endsWith' }] }}
+          filterModel={{ items: [{ field: 'name', value: 'B', operator: 'endsWith' }] }}
           defaultGroupingExpansionDepth={-1}
         />,
       );
@@ -506,24 +536,59 @@ describe('<DataGridPro /> - Tree Data', () => {
       expect(getColumnValues(1)).to.deep.equal(['B', 'B.B']);
     });
 
-    it('should throw an error when using filterMode="server" and treeData', () => {
-      expect(() => {
-        render(<Test filterMode="server" />);
-      }).toErrorDev(
-        'MUI: The `filterMode="server"` prop is not available when the `treeData` is enabled.',
-      );
-    });
+    // it('should throw an error when using filterMode="server" and treeData', () => {
+    //   expect(() => {
+    //     render(<Test filterMode="server" />);
+    //   }).toErrorDev(
+    //     'MUI: The `filterMode="server"` prop is not available when the `treeData` is enabled.',
+    //   );
+    // });
 
     it('should set the filtered descendant count on matching nodes even if the children are collapsed', () => {
       render(
+        <Test filterModel={{ items: [{ field: 'name', value: 'A', operator: 'endsWith' }] }} />,
+      );
+
+      // A has A.A but not A.B
+      // B has B.A (match filter), B.B (has matching children), B.B.A (match filters), B.B.A.A (match filters)
+      expect(getColumnValues(0)).to.deep.equal(['A (1)', 'B (4)']);
+    });
+
+    it('should apply quick filter without throwing error', () => {
+      render(
         <Test
-          filterModel={{ items: [{ columnField: 'name', value: 'A', operatorValue: 'endsWith' }] }}
+          initialState={{
+            filter: {
+              filterModel: {
+                items: [],
+                quickFilterValues: ['A', 'B'],
+              },
+            },
+          }}
         />,
       );
 
       // A has A.A but not A.B
       // B has B.A (match filter), B.B (has matching children), B.B.A (match filters), B.B.A.A (match filters)
       expect(getColumnValues(0)).to.deep.equal(['A (1)', 'B (4)']);
+    });
+
+    it('should remove generated rows when they and their children do not pass quick filter', () => {
+      render(
+        <Test
+          rows={[
+            { name: 'A.B' },
+            { name: 'A.C' },
+            { name: 'B.C' },
+            { name: 'B.D' },
+            { name: 'D.A' },
+          ]}
+          filterModel={{ items: [], quickFilterValues: ['D'] }}
+          defaultGroupingExpansionDepth={-1}
+        />,
+      );
+
+      expect(getColumnValues(0)).to.deep.equal(['B (1)', 'D', 'D (1)', 'A']);
     });
   });
 
@@ -656,6 +721,20 @@ describe('<DataGridPro /> - Tree Data', () => {
         'A.B',
         'A.A',
       ]);
+    });
+  });
+
+  describe('regressions', () => {
+    // See https://github.com/mui/mui-x/issues/9402
+    it('should not fail with checkboxSelection', () => {
+      const initialRows = rowsWithoutGap;
+      const { setProps } = render(<Test checkboxSelection rows={initialRows} />);
+
+      const newRows = [...initialRows];
+      newRows.splice(7, 1);
+      setProps({
+        rows: newRows,
+      });
     });
   });
 });

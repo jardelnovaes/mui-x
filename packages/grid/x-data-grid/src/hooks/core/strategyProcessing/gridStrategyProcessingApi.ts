@@ -1,10 +1,13 @@
 import {
   GridRowTreeCreationParams,
   GridRowTreeCreationValue,
-} from '../../features/rows/gridRowsState';
+  GridRowsState,
+} from '../../features/rows/gridRowsInterfaces';
 import {
   GridFilteringMethodParams,
   GridFilteringMethodValue,
+  GridFilterState,
+  GridVisibleRowsLookupState,
 } from '../../features/filter/gridFilterState';
 import {
   GridSortingMethodParams,
@@ -32,6 +35,14 @@ export interface GridStrategyProcessingLookup {
     params: GridSortingMethodParams;
     value: GridSortingMethodValue;
   };
+  visibleRowsLookupCreation: {
+    group: 'rowTree';
+    params: {
+      tree: GridRowsState['tree'];
+      filteredRowsLookup: GridFilterState['filteredRowsLookup'];
+    };
+    value: GridVisibleRowsLookupState;
+  };
 }
 
 export type GridStrategyProcessor<P extends GridStrategyProcessorName> = (
@@ -47,20 +58,19 @@ export interface GridStrategyProcessingApi {
    * @param {GridStrategyProcessorName} processorName The name of the processor.
    * @param {GridStrategyProcessor<P>} processor The processor to register.
    * @returns {() => void} A function to unregister the processor.
-   * @ignore - do not document.
    */
-  unstable_registerStrategyProcessor: <P extends GridStrategyProcessorName>(
+  registerStrategyProcessor: <P extends GridStrategyProcessorName>(
     strategyName: string,
     processorName: P,
-    callback: GridStrategyProcessor<P>,
+    processor: GridStrategyProcessor<P>,
   ) => () => void;
   /**
    * Set a callback to know if a strategy is available.
+   * @param {GridStrategyGroup} strategyGroup The group for which we set strategy availability.
    * @param {string} strategyName The name of the strategy.
    * @param {boolean} callback A callback to know if this strategy is available.
-   * @ignore - do not document.
    */
-  unstable_setStrategyAvailability: (
+  setStrategyAvailability: (
     strategyGroup: GridStrategyGroup,
     strategyName: string,
     callback: () => boolean,
@@ -69,17 +79,15 @@ export interface GridStrategyProcessingApi {
    * Returns the name of the active strategy of a given strategy group
    * @param {GridStrategyGroup} strategyGroup The group from which we want the active strategy.
    * @returns {string} The name of the active strategy.
-   * @ignore - do not document.
    */
-  unstable_getActiveStrategy: (strategyGroup: GridStrategyGroup) => string;
+  getActiveStrategy: (strategyGroup: GridStrategyGroup) => string;
   /**
    * Run the processor registered for the active strategy.
    * @param {GridStrategyProcessorName} processorName The name of the processor to run.
    * @param {GridStrategyProcessingLookup[P]['params']} params Additional params to pass to the processor.
    * @returns {GridStrategyProcessingLookup[P]['value']} The value returned by the processor.
-   * @ignore - do not document.
    */
-  unstable_applyStrategyProcessor: <P extends GridStrategyProcessorName>(
+  applyStrategyProcessor: <P extends GridStrategyProcessorName>(
     processorName: P,
     params: GridStrategyProcessingLookup[P]['params'],
   ) => GridStrategyProcessingLookup[P]['value'];

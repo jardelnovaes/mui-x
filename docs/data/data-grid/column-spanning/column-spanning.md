@@ -1,7 +1,3 @@
----
-title: Data Grid - Column spanning
----
-
 # Data Grid - Column spanning
 
 <p class="description">Span cells across several columns.</p>
@@ -19,7 +15,7 @@ interface GridColDef {
    * Number of columns a cell should span.
    * @default 1
    */
-  colSpan?: number | ((params: GridCellParams<V, R, F>) => number | undefined);
+  colSpan?: number | ((params: GridCellParams<R, V, F>) => number | undefined);
   …
 }
 ```
@@ -51,11 +47,11 @@ interface GridColDef {
 ## Function signature
 
 The function signature allows spanning only **specific cells** in the column.
-The function receives [`GridCellParams`](/api/data-grid/grid-cell-params/) as argument.
+The function receives [`GridCellParams`](/x/api/data-grid/grid-cell-params/) as argument.
 
 ```ts
 interface GridColDef {
-  colSpan?: (params: GridCellParams<V, R, F>) => number | undefined;
+  colSpan?: (params: GridCellParams<R, V, F>) => number | undefined;
 }
 ```
 
@@ -69,3 +65,4 @@ Function signature can also be useful to derive `colSpan` value from row data:
 
 - [DataGrid](/x/api/data-grid/data-grid/)
 - [DataGridPro](/x/api/data-grid/data-grid-pro/)
+- [DataGridPremium](/x/api/data-grid/data-grid-premium/)

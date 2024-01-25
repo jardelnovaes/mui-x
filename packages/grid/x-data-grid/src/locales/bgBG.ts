@@ -6,7 +6,6 @@ const bgBGGrid: Partial<GridLocaleText> = {
   // Root
   noRowsLabel: 'Няма редове',
   noResultsOverlayLabel: 'Няма намерени резултати.',
-  errorOverlayDefaultLabel: 'Възникна грешка.',
 
   // Density selector toolbar button text
   toolbarDensity: 'Гъстота',
@@ -27,16 +26,16 @@ const bgBGGrid: Partial<GridLocaleText> = {
   toolbarFiltersTooltipActive: (count) => `${count} активни филтри`,
 
   // Quick filter toolbar field
-  // toolbarQuickFilterPlaceholder: 'Search...',
-  // toolbarQuickFilterLabel: 'Search',
-  // toolbarQuickFilterDeleteIconLabel: 'Clear',
+  toolbarQuickFilterPlaceholder: 'Търси…',
+  toolbarQuickFilterLabel: 'Търсене',
+  toolbarQuickFilterDeleteIconLabel: 'Изчисти',
 
   // Export selector toolbar button text
   toolbarExport: 'Изтегли',
   toolbarExportLabel: 'Изтегли',
   toolbarExportCSV: 'Изтегли като CSV',
   toolbarExportPrint: 'Принтиране',
-  // toolbarExportExcel: 'Download as Excel',
+  toolbarExportExcel: 'Изтегли като Excel',
 
   // Columns panel text
   columnsPanelTextFieldLabel: 'Намери колона',
@@ -47,11 +46,10 @@ const bgBGGrid: Partial<GridLocaleText> = {
 
   // Filter panel text
   filterPanelAddFilter: 'Добави Филтър',
+  filterPanelRemoveAll: 'Премахни всички',
   filterPanelDeleteIconLabel: 'Изтрий',
-  // filterPanelLinkOperator: 'Logic operator',
-  filterPanelOperators: 'Оператори',
-
-  // TODO v6: rename to filterPanelOperator
+  filterPanelLogicOperator: 'Логически оператор',
+  filterPanelOperator: 'Оператори',
   filterPanelOperatorAnd: 'И',
   filterPanelOperatorOr: 'Или',
   filterPanelColumns: 'Колони',
@@ -72,6 +70,33 @@ const bgBGGrid: Partial<GridLocaleText> = {
   filterOperatorIsEmpty: 'е празен',
   filterOperatorIsNotEmpty: 'не е празен',
   filterOperatorIsAnyOf: 'е някой от',
+  'filterOperator=': '=',
+  'filterOperator!=': '!=',
+  'filterOperator>': '>',
+  'filterOperator>=': '>=',
+  'filterOperator<': '<',
+  'filterOperator<=': '<=',
+
+  // Header filter operators text
+  headerFilterOperatorContains: 'Съдържа',
+  headerFilterOperatorEquals: 'Равнo',
+  headerFilterOperatorStartsWith: 'Започва с',
+  headerFilterOperatorEndsWith: 'Завършва с',
+  headerFilterOperatorIs: 'Равно е на',
+  headerFilterOperatorNot: 'Не се равнява на',
+  headerFilterOperatorAfter: 'След',
+  headerFilterOperatorOnOrAfter: 'След (включително)',
+  headerFilterOperatorBefore: 'Преди',
+  headerFilterOperatorOnOrBefore: 'Преди (включително)',
+  headerFilterOperatorIsEmpty: 'Празен',
+  headerFilterOperatorIsNotEmpty: 'Не е празен',
+  headerFilterOperatorIsAnyOf: 'Всичко от',
+  'headerFilterOperator=': 'Равно',
+  'headerFilterOperator!=': 'Различно',
+  'headerFilterOperator>': 'По-голямо от',
+  'headerFilterOperator>=': 'По-голямо или равно на',
+  'headerFilterOperator<': 'По-малко от',
+  'headerFilterOperator<=': 'По-малко или равно на',
 
   // Filter values text
   filterValueAny: 'всякакви',
@@ -81,6 +106,7 @@ const bgBGGrid: Partial<GridLocaleText> = {
   // Column menu text
   columnMenuLabel: 'Меню',
   columnMenuShowColumns: 'Покажи колоните',
+  columnMenuManageColumns: 'Управление на колони',
   columnMenuFilter: 'Филтри',
   columnMenuHideColumn: 'Скрий',
   columnMenuUnsort: 'Отмени сортирането',
@@ -99,7 +125,7 @@ const bgBGGrid: Partial<GridLocaleText> = {
       : `${count.toLocaleString()} избран ред`,
 
   // Total row amount footer text
-  footerTotalRows: 'Общо Rедове:',
+  footerTotalRows: 'Общо Редове:',
 
   // Total visible row amount footer text
   footerTotalVisibleRows: (visibleCount, totalCount) =>
@@ -135,11 +161,20 @@ const bgBGGrid: Partial<GridLocaleText> = {
   unGroupColumn: (name) => `Спри групиране по ${name}`,
 
   // Master/detail
+  detailPanelToggle: 'Превключване на панела с детайли',
   expandDetailPanel: 'Разгъване',
   collapseDetailPanel: 'Свиване',
 
   // Row reordering text
-  // rowReorderingHeaderName: 'Row reordering',
+  rowReorderingHeaderName: 'Подредба на редове',
+
+  // Aggregation
+  aggregationMenuItemHeader: 'Агрегиране',
+  aggregationFunctionLabelSum: 'сума',
+  aggregationFunctionLabelAvg: 'срст',
+  aggregationFunctionLabelMin: 'мин',
+  aggregationFunctionLabelMax: 'макс',
+  aggregationFunctionLabelSize: 'размер',
 };
 
 export const bgBG: Localization = getGridLocalization(bgBGGrid, bgBGCore);

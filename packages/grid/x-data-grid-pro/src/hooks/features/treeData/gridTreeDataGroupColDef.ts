@@ -12,7 +12,10 @@ export const GRID_TREE_DATA_GROUPING_COL_DEF: Omit<GridColDef, 'field' | 'editab
   disableReorder: true,
   align: 'left',
   width: 200,
-  valueGetter: (params) => params.rowNode.groupingKey,
+  valueGetter: (params) =>
+    params.rowNode.type === 'group' || params.rowNode.type === 'leaf'
+      ? params.rowNode.groupingKey
+      : undefined,
 };
 
 export const GRID_TREE_DATA_GROUPING_FIELD = '__tree_data_group__';

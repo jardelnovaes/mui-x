@@ -7,13 +7,13 @@ import {
   GridFilterItem,
   GridFilterModel,
   GridFilterOperator,
+  useGridRootProps,
 } from '@mui/x-data-grid';
 import { useDemoData } from '@mui/x-data-grid-generator';
 import SyncIcon from '@mui/icons-material/Sync';
 
-const SUBMIT_FILTER_STROKE_TIME = 500;
-
 function InputNumberInterval(props: GridFilterInputValueProps) {
+  const rootProps = useGridRootProps();
   const { item, applyValue, focusElementRef = null } = props;
 
   const filterTimeout = React.useRef<any>();
@@ -41,7 +41,7 @@ function InputNumberInterval(props: GridFilterInputValueProps) {
     filterTimeout.current = setTimeout(() => {
       setIsApplying(false);
       applyValue({ ...item, value: [lowerBound, upperBound] });
-    }, SUBMIT_FILTER_STROKE_TIME);
+    }, rootProps.filterDebounceMs);
   };
 
   const handleUpperFilterChange: TextFieldProps['onChange'] = (event) => {
@@ -119,9 +119,9 @@ export default function CustomMultiValueOperator() {
     items: [
       {
         id: 1,
-        columnField: 'quantity',
+        field: 'quantity',
         value: [5000, 15000],
-        operatorValue: 'between',
+        operator: 'between',
       },
     ],
   });
@@ -145,7 +145,7 @@ export default function CustomMultiValueOperator() {
   return (
     <div style={{ height: 400, width: '100%' }}>
       <DataGrid
-        rows={data.rows}
+        {...data}
         columns={columns}
         filterModel={filterModel}
         onFilterModelChange={(model) => setFilterModel(model)}

@@ -11,15 +11,15 @@ import Alert from '@mui/material/Alert';
 const useFakeMutation = () => {
   return React.useCallback(
     (user) =>
-      new Promise((resolve, reject) =>
+      new Promise((resolve, reject) => {
         setTimeout(() => {
           if (user.name?.trim() === '') {
             reject(new Error("Error while saving user: name can't be empty."));
           } else {
             resolve({ ...user, name: user.name?.toUpperCase() });
           }
-        }, 200),
-      ),
+        }, 200);
+      }),
     [],
   );
 };
@@ -52,7 +52,6 @@ export default function ServerSidePersistence() {
         columns={columns}
         processRowUpdate={processRowUpdate}
         onProcessRowUpdateError={handleProcessRowUpdateError}
-        experimentalFeatures={{ newEditingApi: true }}
       />
       {!!snackbar && (
         <Snackbar
@@ -70,7 +69,14 @@ export default function ServerSidePersistence() {
 
 const columns = [
   { field: 'name', headerName: 'Name', width: 180, editable: true },
-  { field: 'age', headerName: 'Age', type: 'number', editable: true },
+  {
+    field: 'age',
+    headerName: 'Age',
+    type: 'number',
+    editable: true,
+    align: 'left',
+    headerAlign: 'left',
+  },
   {
     field: 'dateCreated',
     headerName: 'Date Created',

@@ -1,4 +1,3 @@
-import type { GridRowId } from '../../../models';
 import { GridColDef, GridStateColDef } from '../../../models/colDef/gridColDef';
 import type { GridColumnDimensionProperties } from './gridColumnsUtils';
 
@@ -11,16 +10,9 @@ export type GridColumnRawLookup = {
 };
 
 export interface GridColumnsState {
-  /**
-   * TODO v6: Rename `all` to `orderedFields`
-   */
-  all: string[];
+  orderedFields: string[];
   lookup: GridColumnLookup;
   columnVisibilityModel: GridColumnVisibilityModel;
-}
-
-export interface GridColumnsInternalCache {
-  isUsingColumnVisibilityModel: boolean;
 }
 
 export type GridColumnDimensions = { [key in GridColumnDimensionProperties]?: number };
@@ -35,6 +27,6 @@ export type GridColumnsRawState = Omit<GridColumnsState, 'lookup'> & {
   lookup: GridColumnRawLookup;
 };
 
-export type GridHydrateColumnsValue = Omit<GridColumnsRawState, 'columnVisibilityModel'>;
+export type GridHydrateColumnsValue = GridColumnsRawState;
 
-export type GridColumnVisibilityModel = Record<GridRowId, boolean>;
+export type GridColumnVisibilityModel = Record<GridColDef['field'], boolean>;

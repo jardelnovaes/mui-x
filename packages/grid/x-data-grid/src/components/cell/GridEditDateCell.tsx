@@ -1,14 +1,22 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import { unstable_composeClasses as composeClasses } from '@mui/material';
-import { unstable_useEnhancedEffect as useEnhancedEffect } from '@mui/material/utils';
+import {
+  unstable_composeClasses as composeClasses,
+  unstable_useEnhancedEffect as useEnhancedEffect,
+} from '@mui/utils';
 import InputBase, { InputBaseProps } from '@mui/material/InputBase';
+import { styled } from '@mui/material/styles';
 import { GridRenderEditCellParams } from '../../models/params/gridCellParams';
 import { getDataGridUtilityClass } from '../../constants/gridClasses';
 import { useGridRootProps } from '../../hooks/utils/useGridRootProps';
 import { DataGridProcessedProps } from '../../models/props/DataGridProps';
+import { useGridApiContext } from '../../hooks/utils/useGridApiContext';
 
 type OwnerState = { classes: DataGridProcessedProps['classes'] };
+
+const StyledInputBase = styled(InputBase)({
+  fontSize: 'inherit',
+});
 
 const useUtilityClasses = (ownerState: OwnerState) => {
   const { classes } = ownerState;
@@ -49,7 +57,6 @@ function GridEditDateCell(props: GridEditDateCellProps) {
     isEditable,
     tabIndex,
     hasFocus,
-    getValue,
     inputProps,
     isValidating,
     isProcessingProps,
@@ -58,6 +65,7 @@ function GridEditDateCell(props: GridEditDateCellProps) {
   } = props;
 
   const isDateTime = colDef.type === 'dateTime';
+  const apiRef = useGridApiContext();
   const inputRef = React.useRef<HTMLInputElement>();
 
   const valueTransformed = React.useMemo(() => {
@@ -90,33 +98,39 @@ function GridEditDateCell(props: GridEditDateCellProps) {
   const ownerState = { classes: rootProps.classes };
   const classes = useUtilityClasses(ownerState);
 
-  const handleChange = React.useCallback(
-    async (event) => {
-      const newFormattedDate = event.target.value;
-      let newParsedDate: Date | null;
+  const parseValueToDate = React.useCallback((value: string) => {
+    if (value === '') {
+      return null;
+    }
 
-      if (newFormattedDate === '') {
-        newParsedDate = null;
-      } else {
-        const [date, time] = newFormattedDate.split('T');
-        const [year, month, day] = date.split('-');
-        newParsedDate = new Date();
-        newParsedDate.setFullYear(year, Number(month) - 1, day);
-        newParsedDate.setHours(0, 0, 0, 0);
-        if (time) {
-          const [hours, minutes] = time.split(':');
-          newParsedDate.setHours(Number(hours), Number(minutes), 0, 0);
-        }
-      }
+    const [date, time] = value.split('T');
+    const [year, month, day] = date.split('-');
+
+    const parsedDate = new Date();
+    parsedDate.setFullYear(Number(year), Number(month) - 1, Number(day));
+    parsedDate.setHours(0, 0, 0, 0);
+
+    if (time) {
+      const [hours, minutes] = time.split(':');
+      parsedDate.setHours(Number(hours), Number(minutes), 0, 0);
+    }
+
+    return parsedDate;
+  }, []);
+
+  const handleChange = React.useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const newFormattedDate = event.target.value;
+      const newParsedDate = parseValueToDate(newFormattedDate);
 
       if (onValueChange) {
         await onValueChange(event, newParsedDate);
       }
 
       setValueState({ parsed: newParsedDate, formatted: newFormattedDate });
-      api.setEditCellValue({ id, field, value: newParsedDate }, event);
+      apiRef.current.setEditCellValue({ id, field, value: newParsedDate }, event);
     },
-    [api, field, id, onValueChange],
+    [apiRef, field, id, onValueChange, parseValueToDate],
   );
 
   React.useEffect(() => {
@@ -136,9 +150,8 @@ function GridEditDateCell(props: GridEditDateCellProps) {
       inputRef.current!.focus();
     }
   }, [hasFocus]);
-
   return (
-    <InputBase
+    <StyledInputBase
       inputRef={inputRef}
       fullWidth
       className={classes.root}
@@ -161,13 +174,13 @@ GridEditDateCell.propTypes = {
   // ----------------------------------------------------------------------
   /**
    * GridApi that let you manipulate the grid.
-   * @deprecated Use the `apiRef` returned by `useGridApiContext` or `useGridApiRef` (only available in `@mui/x-data-grid-pro`)
    */
-  api: PropTypes.any.isRequired,
+  api: PropTypes.object.isRequired,
   /**
    * The mode of the cell.
    */
   cellMode: PropTypes.oneOf(['edit', 'view']).isRequired,
+  changeReason: PropTypes.oneOf(['debouncedSetEditCellValue', 'setEditCellValue']),
   /**
    * The column of the row that the current cell belongs to.
    */
@@ -180,14 +193,6 @@ GridEditDateCell.propTypes = {
    * The cell value formatted with the column valueFormatter.
    */
   formattedValue: PropTypes.any,
-  /**
-   * Get the cell value of a row and field.
-   * @param {GridRowId} id The row id.
-   * @param {string} field The field.
-   * @returns {any} The cell value.
-   * @deprecated Use `params.row` to directly access the fields you want instead.
-   */
-  getValue: PropTypes.func.isRequired,
   /**
    * If true, the cell is the active element.
    */
@@ -212,7 +217,7 @@ GridEditDateCell.propTypes = {
   /**
    * The row model of the row that the current cell belongs to.
    */
-  row: PropTypes.object.isRequired,
+  row: PropTypes.any.isRequired,
   /**
    * The node of the row that the current cell belongs to.
    */
@@ -222,7 +227,8 @@ GridEditDateCell.propTypes = {
    */
   tabIndex: PropTypes.oneOf([-1, 0]).isRequired,
   /**
-   * The cell value, but if the column has valueGetter, use getValue.
+   * The cell value.
+   * If the column has `valueGetter`, use `params.row` to directly access the fields.
    */
   value: PropTypes.any,
 } as any;

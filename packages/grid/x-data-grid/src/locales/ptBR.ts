@@ -6,7 +6,6 @@ const ptBRGrid: Partial<GridLocaleText> = {
   // Root
   noRowsLabel: 'Nenhuma linha',
   noResultsOverlayLabel: 'Nenhum resultado encontrado.',
-  errorOverlayDefaultLabel: 'Ocorreu um erro.',
 
   // Density selector toolbar button text
   toolbarDensity: 'Densidade',
@@ -28,15 +27,15 @@ const ptBRGrid: Partial<GridLocaleText> = {
     `${count} ${count !== 1 ? 'filtros' : 'filtro'} ${count !== 1 ? 'ativos' : 'ativo'}`,
 
   // Quick filter toolbar field
-  // toolbarQuickFilterPlaceholder: 'Search...',
-  // toolbarQuickFilterLabel: 'Search',
-  // toolbarQuickFilterDeleteIconLabel: 'Clear',
+  toolbarQuickFilterPlaceholder: 'Procurar…',
+  toolbarQuickFilterLabel: 'Procurar',
+  toolbarQuickFilterDeleteIconLabel: 'Limpar',
 
   // Export selector toolbar button text
   toolbarExport: 'Exportar',
   toolbarExportLabel: 'Exportar',
   toolbarExportCSV: 'Baixar como CSV',
-  toolbarExportPrint: 'Print',
+  toolbarExportPrint: 'Imprimir',
   toolbarExportExcel: 'Baixar como Excel',
 
   // Columns panel text
@@ -48,11 +47,10 @@ const ptBRGrid: Partial<GridLocaleText> = {
 
   // Filter panel text
   filterPanelAddFilter: 'Adicionar filtro',
+  filterPanelRemoveAll: 'Remover todos',
   filterPanelDeleteIconLabel: 'Excluir',
-  filterPanelLinkOperator: 'Operador lógico',
-  filterPanelOperators: 'Operador',
-
-  // TODO v6: rename to filterPanelOperator
+  filterPanelLogicOperator: 'Operador lógico',
+  filterPanelOperator: 'Operador',
   filterPanelOperatorAnd: 'E',
   filterPanelOperatorOr: 'Ou',
   filterPanelColumns: 'Colunas',
@@ -72,7 +70,34 @@ const ptBRGrid: Partial<GridLocaleText> = {
   filterOperatorOnOrBefore: 'em ou antes de',
   filterOperatorIsEmpty: 'está vazio',
   filterOperatorIsNotEmpty: 'não está vazio',
-  // filterOperatorIsAnyOf: 'is any of',
+  filterOperatorIsAnyOf: 'é qualquer um dos',
+  'filterOperator=': 'igual à',
+  'filterOperator!=': 'diferente de',
+  'filterOperator>': 'maior que',
+  'filterOperator>=': 'maior ou igual que',
+  'filterOperator<': 'menor que',
+  'filterOperator<=': 'menor ou igual que',
+
+  // Header filter operators text
+  headerFilterOperatorContains: 'Contém',
+  headerFilterOperatorEquals: 'Igual',
+  headerFilterOperatorStartsWith: 'Começa com',
+  headerFilterOperatorEndsWith: 'Termina com',
+  headerFilterOperatorIs: 'É',
+  headerFilterOperatorNot: 'Não é',
+  headerFilterOperatorAfter: 'Depois de',
+  headerFilterOperatorOnOrAfter: 'Está entre ou depois de',
+  headerFilterOperatorBefore: 'Antes de',
+  headerFilterOperatorOnOrBefore: 'Está entre ou antes de',
+  headerFilterOperatorIsEmpty: 'É vazio',
+  headerFilterOperatorIsNotEmpty: 'Não é vazio',
+  headerFilterOperatorIsAnyOf: 'É algum',
+  'headerFilterOperator=': 'Igual',
+  'headerFilterOperator!=': 'Não igual',
+  'headerFilterOperator>': 'Maior que',
+  'headerFilterOperator>=': 'Maior que ou igual a',
+  'headerFilterOperator<': 'Menor que',
+  'headerFilterOperator<=': 'Menor que ou igual a',
 
   // Filter values text
   filterValueAny: 'qualquer',
@@ -82,6 +107,7 @@ const ptBRGrid: Partial<GridLocaleText> = {
   // Column menu text
   columnMenuLabel: 'Menu',
   columnMenuShowColumns: 'Exibir colunas',
+  columnMenuManageColumns: 'Gerir colunas',
   columnMenuFilter: 'Filtrar',
   columnMenuHideColumn: 'Ocultar',
   columnMenuUnsort: 'Desfazer ordenação',
@@ -127,9 +153,9 @@ const ptBRGrid: Partial<GridLocaleText> = {
   unpin: 'Desafixar',
 
   // Tree Data
-  // treeDataGroupingHeaderName: 'Group',
-  // treeDataExpand: 'see children',
-  // treeDataCollapse: 'hide children',
+  treeDataGroupingHeaderName: 'Grupo',
+  treeDataExpand: 'mostrar filhos',
+  treeDataCollapse: 'esconder filhos',
 
   // Grouping columns
   groupingColumnHeaderName: 'Grupo',
@@ -137,11 +163,20 @@ const ptBRGrid: Partial<GridLocaleText> = {
   unGroupColumn: (name) => `Parar agrupamento por ${name}`,
 
   // Master/detail
+  detailPanelToggle: 'Painel de detalhes',
   expandDetailPanel: 'Expandir',
   collapseDetailPanel: 'Esconder',
 
   // Row reordering text
-  // rowReorderingHeaderName: 'Row reordering',
+  rowReorderingHeaderName: 'Reorganizar linhas',
+
+  // Aggregation
+  aggregationMenuItemHeader: 'Agrupar',
+  aggregationFunctionLabelSum: 'soma',
+  aggregationFunctionLabelAvg: 'média',
+  aggregationFunctionLabelMin: 'mín',
+  aggregationFunctionLabelMax: 'máx',
+  aggregationFunctionLabelSize: 'tamanho',
 };
 
 export const ptBR: Localization = getGridLocalization(ptBRGrid, ptBRCore);

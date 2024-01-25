@@ -1,4 +1,6 @@
+import * as React from 'react';
 import { ComponentsPropsList } from '@mui/material/styles';
+import { GridColDef } from '../colDef';
 
 /**
  * Set the types of the texts in the grid.
@@ -7,7 +9,6 @@ export interface GridLocaleText {
   // Root
   noRowsLabel: string;
   noResultsOverlayLabel: string;
-  errorOverlayDefaultLabel: string;
 
   // Density selector toolbar button text
   toolbarDensity: React.ReactNode;
@@ -48,9 +49,10 @@ export interface GridLocaleText {
 
   // Filter panel text
   filterPanelAddFilter: React.ReactNode;
+  filterPanelRemoveAll: React.ReactNode;
   filterPanelDeleteIconLabel: string;
-  filterPanelLinkOperator: string;
-  filterPanelOperators: React.ReactNode;
+  filterPanelLogicOperator: string;
+  filterPanelOperator: React.ReactNode;
   filterPanelOperatorAnd: React.ReactNode;
   filterPanelOperatorOr: React.ReactNode;
   filterPanelColumns: React.ReactNode;
@@ -71,6 +73,33 @@ export interface GridLocaleText {
   filterOperatorIsEmpty: string;
   filterOperatorIsNotEmpty: string;
   filterOperatorIsAnyOf: string;
+  'filterOperator=': string;
+  'filterOperator!=': string;
+  'filterOperator>': string;
+  'filterOperator>=': string;
+  'filterOperator<': string;
+  'filterOperator<=': string;
+
+  // Header filter operators text
+  headerFilterOperatorContains: string;
+  headerFilterOperatorEquals: string;
+  headerFilterOperatorStartsWith: string;
+  headerFilterOperatorEndsWith: string;
+  headerFilterOperatorIs: string;
+  headerFilterOperatorNot: string;
+  headerFilterOperatorAfter: string;
+  headerFilterOperatorOnOrAfter: string;
+  headerFilterOperatorBefore: string;
+  headerFilterOperatorOnOrBefore: string;
+  headerFilterOperatorIsEmpty: string;
+  headerFilterOperatorIsNotEmpty: string;
+  headerFilterOperatorIsAnyOf: string;
+  'headerFilterOperator=': string;
+  'headerFilterOperator!=': string;
+  'headerFilterOperator>': string;
+  'headerFilterOperator>=': string;
+  'headerFilterOperator<': string;
+  'headerFilterOperator<=': string;
 
   // Filter values text
   filterValueAny: string;
@@ -80,11 +109,12 @@ export interface GridLocaleText {
   // Column menu text
   columnMenuLabel: string;
   columnMenuShowColumns: React.ReactNode;
+  columnMenuManageColumns: React.ReactNode;
   columnMenuFilter: React.ReactNode;
   columnMenuHideColumn: React.ReactNode;
   columnMenuUnsort: React.ReactNode;
-  columnMenuSortAsc: React.ReactNode;
-  columnMenuSortDesc: React.ReactNode;
+  columnMenuSortAsc: React.ReactNode | ((colDef: GridColDef) => React.ReactNode);
+  columnMenuSortDesc: React.ReactNode | ((colDef: GridColDef) => React.ReactNode);
 
   // Column header text
   columnHeaderFiltersTooltipActive: (count: number) => React.ReactNode;
@@ -130,17 +160,26 @@ export interface GridLocaleText {
   unGroupColumn: (name: string) => string;
 
   // Master/detail
+  detailPanelToggle: string;
   expandDetailPanel: string;
   collapseDetailPanel: string;
+
+  // Row reordering text
+  rowReorderingHeaderName: string;
+
+  // Aggregation
+  aggregationMenuItemHeader: string;
+  aggregationFunctionLabelSum: string;
+  aggregationFunctionLabelAvg: string;
+  aggregationFunctionLabelMin: string;
+  aggregationFunctionLabelMax: string;
+  aggregationFunctionLabelSize: string;
 
   // Used core components translation keys
   MuiTablePagination: Omit<
     ComponentsPropsList['MuiTablePagination'],
     'page' | 'count' | 'onChangePage' | 'rowsPerPage' | 'onPageChange'
   >;
-
-  // Row reordering text
-  rowReorderingHeaderName: string;
 }
 
 export type GridTranslationKeys = keyof GridLocaleText;

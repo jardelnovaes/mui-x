@@ -13,11 +13,11 @@ import {
 } from '@mui/x-data-grid-pro';
 import { useDemoData } from '@mui/x-data-grid-generator';
 
-const GridCustomToolbar = ({
+function GridCustomToolbar({
   syncState,
 }: {
   syncState: (stateToSave: GridInitialState) => void;
-}) => {
+}) {
   const rootProps = useGridRootProps();
   const apiRef = useGridApiContext();
 
@@ -27,16 +27,15 @@ const GridCustomToolbar = ({
       <GridToolbarDensitySelector />
       <Button
         size="small"
-        color="primary"
-        startIcon={<rootProps.components.ColumnSelectorIcon />}
+        startIcon={<rootProps.slots.columnSelectorIcon />}
         onClick={() => syncState(apiRef.current.exportState())}
-        {...rootProps.componentsProps?.baseButton}
+        {...rootProps.slotProps?.baseButton}
       >
         Recreate the 2nd grid
       </Button>
     </GridToolbarContainer>
   );
-};
+}
 
 export default function RestoreStateInitialState() {
   const { data, loading } = useDemoData({
@@ -47,8 +46,8 @@ export default function RestoreStateInitialState() {
 
   const [savedState, setSavedState] = React.useState<{
     count: number;
-    initialState: GridInitialState | undefined;
-  }>({ count: 0, initialState: undefined });
+    initialState: GridInitialState;
+  }>({ count: 0, initialState: data.initialState! });
 
   const syncState = React.useCallback((newInitialState: GridInitialState) => {
     setSavedState((prev) => ({
@@ -60,15 +59,15 @@ export default function RestoreStateInitialState() {
 
   return (
     <Stack spacing={2} sx={{ width: '100%' }}>
-      <Box sx={{ width: '100%', height: 336, bgcolor: 'background.paper' }}>
+      <Box sx={{ height: 336 }}>
         <DataGridPro
           {...data}
           loading={loading}
-          components={{ Toolbar: GridCustomToolbar }}
-          componentsProps={{ toolbar: { syncState } }}
+          slots={{ toolbar: GridCustomToolbar }}
+          slotProps={{ toolbar: { syncState } }}
         />
       </Box>
-      <Box sx={{ width: '100%', height: 300, bgcolor: 'background.paper' }}>
+      <Box sx={{ height: 300 }}>
         <DataGridPro
           {...data}
           loading={loading}

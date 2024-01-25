@@ -1,5 +1,4 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
@@ -60,8 +59,8 @@ const GridCellExpand = React.memo(function GridCellExpand(props) {
       sx={{
         alignItems: 'center',
         lineHeight: '24px',
-        width: 1,
-        height: 1,
+        width: '100%',
+        height: '100%',
         position: 'relative',
         display: 'flex',
       }}
@@ -69,7 +68,7 @@ const GridCellExpand = React.memo(function GridCellExpand(props) {
       <Box
         ref={cellDiv}
         sx={{
-          height: 1,
+          height: '100%',
           width,
           display: 'block',
           position: 'absolute',
@@ -102,27 +101,11 @@ const GridCellExpand = React.memo(function GridCellExpand(props) {
   );
 });
 
-GridCellExpand.propTypes = {
-  value: PropTypes.string.isRequired,
-  width: PropTypes.number.isRequired,
-};
-
 function renderCellExpand(params) {
   return (
     <GridCellExpand value={params.value || ''} width={params.colDef.computedWidth} />
   );
 }
-
-renderCellExpand.propTypes = {
-  /**
-   * The column of the row that the current cell belongs to.
-   */
-  colDef: PropTypes.object.isRequired,
-  /**
-   * The cell value, but if the column has valueGetter, use getValue.
-   */
-  value: PropTypes.string,
-};
 
 const columns = [
   { field: 'col1', headerName: 'Column 1', width: 80, renderCell: renderCellExpand },

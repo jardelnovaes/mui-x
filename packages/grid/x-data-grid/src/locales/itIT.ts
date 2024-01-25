@@ -6,7 +6,6 @@ const itITGrid: Partial<GridLocaleText> = {
   // Root
   noRowsLabel: 'Nessun record',
   noResultsOverlayLabel: 'Nessun record trovato.',
-  errorOverlayDefaultLabel: 'Si è verificato un errore.',
 
   // Density selector toolbar button text
   toolbarDensity: 'Densità',
@@ -28,16 +27,16 @@ const itITGrid: Partial<GridLocaleText> = {
     count > 1 ? `${count} filtri attivi` : `${count} filtro attivo`,
 
   // Quick filter toolbar field
-  // toolbarQuickFilterPlaceholder: 'Search...',
-  // toolbarQuickFilterLabel: 'Search',
-  // toolbarQuickFilterDeleteIconLabel: 'Clear',
+  toolbarQuickFilterPlaceholder: 'Cerca…',
+  toolbarQuickFilterLabel: 'Cerca',
+  toolbarQuickFilterDeleteIconLabel: 'Resetta',
 
   // Export selector toolbar button text
   toolbarExport: 'Esporta',
   toolbarExportLabel: 'Esporta',
   toolbarExportCSV: 'Esporta in CSV',
   toolbarExportPrint: 'Stampa',
-  // toolbarExportExcel: 'Download as Excel',
+  toolbarExportExcel: 'Scarica come Excel',
 
   // Columns panel text
   columnsPanelTextFieldLabel: 'Cerca colonna',
@@ -48,11 +47,10 @@ const itITGrid: Partial<GridLocaleText> = {
 
   // Filter panel text
   filterPanelAddFilter: 'Aggiungi un filtro',
+  filterPanelRemoveAll: 'Rimuovi filtri',
   filterPanelDeleteIconLabel: 'Rimuovi',
-  // filterPanelLinkOperator: 'Logic operator',
-  filterPanelOperators: 'Operatori',
-
-  // TODO v6: rename to filterPanelOperator
+  filterPanelLogicOperator: 'Operatore logico',
+  filterPanelOperator: 'Operatori',
   filterPanelOperatorAnd: 'E (and)',
   filterPanelOperatorOr: 'O (or)',
   filterPanelColumns: 'Colonne',
@@ -73,6 +71,33 @@ const itITGrid: Partial<GridLocaleText> = {
   filterOperatorIsEmpty: 'è vuoto',
   filterOperatorIsNotEmpty: 'non è vuoto',
   filterOperatorIsAnyOf: 'è uno tra',
+  'filterOperator=': '=',
+  'filterOperator!=': '!=',
+  'filterOperator>': '>',
+  'filterOperator>=': '>=',
+  'filterOperator<': '<',
+  'filterOperator<=': '<=',
+
+  // Header filter operators text
+  headerFilterOperatorContains: 'Contiene',
+  headerFilterOperatorEquals: 'uguale a',
+  headerFilterOperatorStartsWith: 'comincia per',
+  headerFilterOperatorEndsWith: 'termina per',
+  headerFilterOperatorIs: 'uguale a',
+  headerFilterOperatorNot: 'diversa da',
+  headerFilterOperatorAfter: 'dopo il',
+  headerFilterOperatorOnOrAfter: 'a partire dal',
+  headerFilterOperatorBefore: 'prima del',
+  headerFilterOperatorOnOrBefore: 'fino al',
+  headerFilterOperatorIsEmpty: 'è vuoto',
+  headerFilterOperatorIsNotEmpty: 'non è vuoto',
+  headerFilterOperatorIsAnyOf: 'è uno tra',
+  'headerFilterOperator=': 'uguale a',
+  'headerFilterOperator!=': 'diverso da',
+  'headerFilterOperator>': 'maggiore di',
+  'headerFilterOperator>=': 'maggiore o uguale a',
+  'headerFilterOperator<': 'minore di',
+  'headerFilterOperator<=': 'minore o uguale a',
 
   // Filter values text
   filterValueAny: 'qualunque',
@@ -82,6 +107,7 @@ const itITGrid: Partial<GridLocaleText> = {
   // Column menu text
   columnMenuLabel: 'Menu',
   columnMenuShowColumns: 'Mostra le colonne',
+  columnMenuManageColumns: 'Gestisci colonne',
   columnMenuFilter: 'Filtra',
   columnMenuHideColumn: 'Nascondi',
   columnMenuUnsort: "Annulla l'ordinamento",
@@ -109,10 +135,10 @@ const itITGrid: Partial<GridLocaleText> = {
 
   // Checkbox selection text
   checkboxSelectionHeaderName: 'Seleziona',
-  // checkboxSelectionSelectAllRows: 'Select all rows',
-  // checkboxSelectionUnselectAllRows: 'Unselect all rows',
-  // checkboxSelectionSelectRow: 'Select row',
-  // checkboxSelectionUnselectRow: 'Unselect row',
+  checkboxSelectionSelectAllRows: 'Seleziona tutte le righe',
+  checkboxSelectionUnselectAllRows: 'Deseleziona tutte le righe',
+  checkboxSelectionSelectRow: 'Seleziona riga',
+  checkboxSelectionUnselectRow: 'Deseleziona riga',
 
   // Boolean cell text
   booleanCellTrueLabel: 'vero',
@@ -137,11 +163,20 @@ const itITGrid: Partial<GridLocaleText> = {
   unGroupColumn: (name) => `Annulla raggruppamento per ${name}`,
 
   // Master/detail
-  // expandDetailPanel: 'Expand',
-  // collapseDetailPanel: 'Collapse',
+  detailPanelToggle: 'Abilita pannello dettagli',
+  expandDetailPanel: 'Espandi',
+  collapseDetailPanel: 'Comprimi',
 
   // Row reordering text
-  // rowReorderingHeaderName: 'Row reordering',
+  rowReorderingHeaderName: 'Riordinamento righe',
+
+  // Aggregation
+  aggregationMenuItemHeader: 'aggregazione',
+  aggregationFunctionLabelSum: 'somma',
+  aggregationFunctionLabelAvg: 'media',
+  aggregationFunctionLabelMin: 'minimo',
+  aggregationFunctionLabelMax: 'massimo',
+  aggregationFunctionLabelSize: 'numero di elementi',
 };
 
 export const itIT: Localization = getGridLocalization(itITGrid, itITCore);

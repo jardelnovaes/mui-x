@@ -6,7 +6,6 @@ const huHUGrid: Partial<GridLocaleText> = {
   // Root
   noRowsLabel: 'Nincsenek sorok',
   noResultsOverlayLabel: 'Nincs találat.',
-  errorOverlayDefaultLabel: 'Váratlan hiba történt.',
 
   // Density selector toolbar button text
   toolbarDensity: 'Sormagasság',
@@ -27,16 +26,16 @@ const huHUGrid: Partial<GridLocaleText> = {
   toolbarFiltersTooltipActive: (count) => `${count} aktív szűrő`,
 
   // Quick filter toolbar field
-  // toolbarQuickFilterPlaceholder: 'Search...',
-  // toolbarQuickFilterLabel: 'Search',
-  // toolbarQuickFilterDeleteIconLabel: 'Clear',
+  toolbarQuickFilterPlaceholder: 'Keresés…',
+  toolbarQuickFilterLabel: 'Keresés',
+  toolbarQuickFilterDeleteIconLabel: 'Törlés',
 
   // Export selector toolbar button text
   toolbarExport: 'Exportálás',
   toolbarExportLabel: 'Exportálás',
   toolbarExportCSV: 'Mentés CSV fájlként',
   toolbarExportPrint: 'Nyomtatás',
-  // toolbarExportExcel: 'Download as Excel',
+  toolbarExportExcel: 'Mentés Excel fájlként',
 
   // Columns panel text
   columnsPanelTextFieldLabel: 'Oszlop keresése',
@@ -47,11 +46,10 @@ const huHUGrid: Partial<GridLocaleText> = {
 
   // Filter panel text
   filterPanelAddFilter: 'Szűrő hozzáadása',
+  filterPanelRemoveAll: 'Összes törlése',
   filterPanelDeleteIconLabel: 'Törlés',
-  filterPanelLinkOperator: 'Logikai operátor',
-  filterPanelOperators: 'Operátorok',
-
-  // TODO v6: rename to filterPanelOperator
+  filterPanelLogicOperator: 'Logikai operátor',
+  filterPanelOperator: 'Operátorok',
   filterPanelOperatorAnd: 'És',
   filterPanelOperatorOr: 'Vagy',
   filterPanelColumns: 'Oszlopok',
@@ -72,6 +70,33 @@ const huHUGrid: Partial<GridLocaleText> = {
   filterOperatorIsEmpty: 'üres',
   filterOperatorIsNotEmpty: 'nem üres',
   filterOperatorIsAnyOf: 'a következők egyike:',
+  'filterOperator=': '=',
+  'filterOperator!=': '!=',
+  'filterOperator>': '>',
+  'filterOperator>=': '>=',
+  'filterOperator<': '<',
+  'filterOperator<=': '<=',
+
+  // Header filter operators text
+  headerFilterOperatorContains: 'Tartalmazza:',
+  headerFilterOperatorEquals: 'Egyenlő ezzel:',
+  headerFilterOperatorStartsWith: 'Ezzel kezdődik:',
+  headerFilterOperatorEndsWith: 'Ezzel végződik:',
+  // headerFilterOperatorIs: 'Is',
+  // headerFilterOperatorNot: 'Is not',
+  headerFilterOperatorAfter: 'Ezutáni:',
+  headerFilterOperatorOnOrAfter: 'Ekkozori vagy ezutáni:',
+  headerFilterOperatorBefore: 'Ezelőtti:',
+  headerFilterOperatorOnOrBefore: 'Ekkori vagy ezelőtti:',
+  headerFilterOperatorIsEmpty: 'Üres',
+  headerFilterOperatorIsNotEmpty: 'Nem üres',
+  headerFilterOperatorIsAnyOf: 'A következők egyike:',
+  'headerFilterOperator=': 'Egyenlő',
+  'headerFilterOperator!=': 'Nem egyenlő',
+  'headerFilterOperator>': 'Nagyobb mint',
+  'headerFilterOperator>=': 'Nagyobb vagy egyenlő',
+  'headerFilterOperator<': 'Kissebb mint',
+  'headerFilterOperator<=': 'Kissebb vagy enygenlő',
 
   // Filter values text
   filterValueAny: 'bármilyen',
@@ -81,6 +106,7 @@ const huHUGrid: Partial<GridLocaleText> = {
   // Column menu text
   columnMenuLabel: 'Menü',
   columnMenuShowColumns: 'Oszlopok megjelenítése',
+  columnMenuManageColumns: 'Oszlopok kezelése',
   columnMenuFilter: 'Szűrők',
   columnMenuHideColumn: 'Elrejtés',
   columnMenuUnsort: 'Sorrend visszaállítása',
@@ -132,11 +158,20 @@ const huHUGrid: Partial<GridLocaleText> = {
   unGroupColumn: (name) => `${name} szerinti csoportosítás törlése`,
 
   // Master/detail
+  detailPanelToggle: 'Részletek panel váltása',
   expandDetailPanel: 'Kibontás',
   collapseDetailPanel: 'Összecsukás',
 
   // Row reordering text
-  // rowReorderingHeaderName: 'Row reordering',
+  rowReorderingHeaderName: 'Sorok újrarendezése',
+
+  // Aggregation
+  aggregationMenuItemHeader: 'Összesítés',
+  aggregationFunctionLabelSum: 'Összeg',
+  aggregationFunctionLabelAvg: 'Átlag',
+  aggregationFunctionLabelMin: 'Minimum',
+  aggregationFunctionLabelMax: 'Maximum',
+  aggregationFunctionLabelSize: 'Darabszám',
 };
 
 export const huHU: Localization = getGridLocalization(huHUGrid, huHUCore);

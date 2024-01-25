@@ -6,7 +6,6 @@ const faIRGrid: Partial<GridLocaleText> = {
   // Root
   noRowsLabel: 'بدون سطر',
   noResultsOverlayLabel: 'نتیجه ای پیدا نشد.',
-  errorOverlayDefaultLabel: 'خطایی روی داد.',
 
   // Density selector toolbar button text
   toolbarDensity: 'تراکم',
@@ -28,16 +27,16 @@ const faIRGrid: Partial<GridLocaleText> = {
     count !== 1 ? `${count} فیلترهای فعال` : `${count} فیلتر فعال`,
 
   // Quick filter toolbar field
-  // toolbarQuickFilterPlaceholder: 'Search...',
-  // toolbarQuickFilterLabel: 'Search',
-  // toolbarQuickFilterDeleteIconLabel: 'Clear',
+  toolbarQuickFilterPlaceholder: 'جستجو...',
+  toolbarQuickFilterLabel: 'جستجو',
+  toolbarQuickFilterDeleteIconLabel: 'حذف',
 
   // Export selector toolbar button text
   toolbarExport: 'خروجی',
   toolbarExportLabel: 'خروجی',
   toolbarExportCSV: 'دانلود به صورت CSV',
   toolbarExportPrint: 'چاپ',
-  // toolbarExportExcel: 'Download as Excel',
+  toolbarExportExcel: 'دانلود به صورت اکسل',
 
   // Columns panel text
   columnsPanelTextFieldLabel: 'پیداکردن ستون',
@@ -48,11 +47,10 @@ const faIRGrid: Partial<GridLocaleText> = {
 
   // Filter panel text
   filterPanelAddFilter: 'افزودن فیلتر',
+  filterPanelRemoveAll: 'حذف همه',
   filterPanelDeleteIconLabel: 'حذف',
-  filterPanelLinkOperator: 'عملگر منطقی',
-  filterPanelOperators: 'عملگرها',
-
-  // TODO v6: rename to filterPanelOperator
+  filterPanelLogicOperator: 'عملگر منطقی',
+  filterPanelOperator: 'عملگرها',
   filterPanelOperatorAnd: 'و',
   filterPanelOperatorOr: 'یا',
   filterPanelColumns: 'ستون‌ها',
@@ -73,6 +71,33 @@ const faIRGrid: Partial<GridLocaleText> = {
   filterOperatorIsEmpty: 'خالی است',
   filterOperatorIsNotEmpty: 'خالی نیست',
   filterOperatorIsAnyOf: 'هر یک از',
+  'filterOperator=': '=',
+  'filterOperator!=': '!=',
+  'filterOperator>': '>',
+  'filterOperator>=': '>=',
+  'filterOperator<': '<',
+  'filterOperator<=': '<=',
+
+  // Header filter operators text
+  headerFilterOperatorContains: 'شامل',
+  headerFilterOperatorEquals: 'مساوی',
+  headerFilterOperatorStartsWith: 'شروع با',
+  headerFilterOperatorEndsWith: 'پایان با',
+  headerFilterOperatorIs: 'هست',
+  headerFilterOperatorNot: 'نیست',
+  headerFilterOperatorAfter: 'بعد از',
+  headerFilterOperatorOnOrAfter: 'معادل یا بعد از',
+  headerFilterOperatorBefore: 'قبل از',
+  headerFilterOperatorOnOrBefore: 'معادل یا قبل از',
+  headerFilterOperatorIsEmpty: 'خالی است',
+  headerFilterOperatorIsNotEmpty: 'خالی نیست',
+  headerFilterOperatorIsAnyOf: 'هر یک از',
+  'headerFilterOperator=': 'مساوی',
+  'headerFilterOperator!=': 'نامساوی',
+  'headerFilterOperator>': 'بزرگتر',
+  'headerFilterOperator>=': 'بزرگتر یا مساوی',
+  'headerFilterOperator<': 'کوچکتر',
+  'headerFilterOperator<=': 'کوچکتر یا مساوی',
 
   // Filter values text
   filterValueAny: 'هرچیزی',
@@ -82,6 +107,7 @@ const faIRGrid: Partial<GridLocaleText> = {
   // Column menu text
   columnMenuLabel: 'فهرست',
   columnMenuShowColumns: 'نمایش ستون‌ها',
+  columnMenuManageColumns: 'مدیریت ستون‌ها',
   columnMenuFilter: 'فیلتر',
   columnMenuHideColumn: 'مخفی',
   columnMenuUnsort: 'نامرتب‌کردن',
@@ -137,11 +163,20 @@ const faIRGrid: Partial<GridLocaleText> = {
   unGroupColumn: (name) => `لغو گروه‌بندی براساس ${name}`,
 
   // Master/detail
+  detailPanelToggle: 'پنل جزئیات',
   expandDetailPanel: 'بازکردن پنل جزئیات',
   collapseDetailPanel: 'بستن پنل جزئیات',
 
   // Row reordering text
-  // rowReorderingHeaderName: 'Row reordering',
+  rowReorderingHeaderName: 'ترتیب مجدد سطر',
+
+  // Aggregation
+  aggregationMenuItemHeader: 'تجمیع',
+  aggregationFunctionLabelSum: 'جمع',
+  aggregationFunctionLabelAvg: 'میانگین',
+  aggregationFunctionLabelMin: 'حداقل',
+  aggregationFunctionLabelMax: 'حداکثر',
+  aggregationFunctionLabelSize: 'اندازه',
 };
 
 export const faIR: Localization = getGridLocalization(faIRGrid, faIRCore);

@@ -1,5 +1,4 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import {
   DataGrid,
   GridToolbarContainer,
@@ -9,15 +8,13 @@ import { useDemoData } from '@mui/x-data-grid-generator';
 
 const VISIBLE_FIELDS = ['name', 'rating', 'country', 'dateCreated', 'isAdmin'];
 
-const CustomToolbar = ({ setFilterButtonEl }) => (
-  <GridToolbarContainer>
-    <GridToolbarFilterButton ref={setFilterButtonEl} />
-  </GridToolbarContainer>
-);
-
-CustomToolbar.propTypes = {
-  setFilterButtonEl: PropTypes.func.isRequired,
-};
+function CustomToolbar({ setFilterButtonEl }) {
+  return (
+    <GridToolbarContainer>
+      <GridToolbarFilterButton ref={setFilterButtonEl} />
+    </GridToolbarContainer>
+  );
+}
 
 export default function CustomFilterPanelPosition() {
   const { data } = useDemoData({
@@ -32,10 +29,10 @@ export default function CustomFilterPanelPosition() {
     <div style={{ height: 400, width: '100%' }}>
       <DataGrid
         {...data}
-        components={{
-          Toolbar: CustomToolbar,
+        slots={{
+          toolbar: CustomToolbar,
         }}
-        componentsProps={{
+        slotProps={{
           panel: {
             anchorEl: filterButtonEl,
           },

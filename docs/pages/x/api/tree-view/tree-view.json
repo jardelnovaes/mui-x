@@ -1,0 +1,74 @@
+{
+  "props": {
+    "children": { "type": { "name": "node" } },
+    "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
+    "className": { "type": { "name": "string" } },
+    "defaultCollapseIcon": { "type": { "name": "node" } },
+    "defaultEndIcon": { "type": { "name": "node" } },
+    "defaultExpanded": {
+      "type": { "name": "arrayOf", "description": "Array&lt;string&gt;" },
+      "default": "[]"
+    },
+    "defaultExpandIcon": { "type": { "name": "node" } },
+    "defaultParentIcon": { "type": { "name": "node" } },
+    "defaultSelected": {
+      "type": { "name": "union", "description": "Array&lt;string&gt;<br>&#124;&nbsp;string" },
+      "default": "[]"
+    },
+    "disabledItemsFocusable": { "type": { "name": "bool" }, "default": "false" },
+    "disableSelection": { "type": { "name": "bool" }, "default": "false" },
+    "expanded": { "type": { "name": "arrayOf", "description": "Array&lt;string&gt;" } },
+    "id": { "type": { "name": "string" } },
+    "multiSelect": { "type": { "name": "bool" }, "default": "false" },
+    "onNodeFocus": {
+      "type": { "name": "func" },
+      "signature": {
+        "type": "function(event: React.SyntheticEvent, nodeId: string, value: string) => void",
+        "describedArgs": ["event", "nodeId", "value"]
+      }
+    },
+    "onNodeSelect": {
+      "type": { "name": "func" },
+      "signature": {
+        "type": "function(event: React.SyntheticEvent, nodeIds: Array<string> | string) => void",
+        "describedArgs": ["event", "nodeIds"]
+      }
+    },
+    "onNodeToggle": {
+      "type": { "name": "func" },
+      "signature": {
+        "type": "function(event: React.SyntheticEvent, nodeIds: array) => void",
+        "describedArgs": ["event", "nodeIds"]
+      }
+    },
+    "selected": { "type": { "name": "any" } },
+    "sx": {
+      "type": {
+        "name": "union",
+        "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
+      },
+      "additionalInfo": { "sx": true }
+    }
+  },
+  "name": "TreeView",
+  "imports": [
+    "import { TreeView } from '@mui/x-tree-view/TreeView';",
+    "import { TreeView } from '@mui/x-tree-view';"
+  ],
+  "classes": [
+    {
+      "key": "root",
+      "className": "MuiTreeView-root",
+      "description": "Styles applied to the root element.",
+      "isGlobal": false
+    }
+  ],
+  "spread": true,
+  "themeDefaultProps": true,
+  "muiName": "MuiTreeView",
+  "forwardsRefTo": "HTMLUListElement",
+  "filename": "/packages/x-tree-view/src/TreeView/TreeView.tsx",
+  "inheritance": null,
+  "demos": "<ul><li><a href=\"/x/react-tree-view/getting-started/\">Tree View - Getting Started</a></li>\n<li><a href=\"/x/react-tree-view/overview/\">MUI X Tree View</a></li></ul>",
+  "cssComponent": false
+}

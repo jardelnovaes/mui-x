@@ -1,19 +1,20 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import { styled } from '@mui/material/styles';
-import Box from '@mui/material/Box';
 import GlobalStyles from '@mui/material/GlobalStyles';
 import { useLocation } from 'react-router-dom';
 import { useFakeTimers } from 'sinon';
 
-const StyledBox = styled(Box)(({ theme, isDataGridTest }) => ({
+const StyledBox = styled('div', {
+  shouldForwardProp: (prop) => prop !== 'isDataGridTest',
+})(({ theme, isDataGridTest }) => ({
   backgroundColor: theme.palette.background.default,
   display: 'flex',
   padding: theme.spacing(1),
   justifyContent: 'center',
   ...(isDataGridTest && {
+    width: 500,
     minHeight: 400,
-    maxWidth: 500,
     // Workaround the min-height limitation
     '& .grid-container': {
       position: 'relative',
@@ -130,6 +131,12 @@ function TestViewer(props) {
           body: {
             margin: 0,
             overflowX: 'hidden',
+          },
+          '@media print': {
+            '@page': {
+              size: 'auto',
+              margin: 0,
+            },
           },
         }}
       />

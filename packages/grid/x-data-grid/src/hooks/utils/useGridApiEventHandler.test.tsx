@@ -1,19 +1,13 @@
 import * as React from 'react';
 import { spy } from 'sinon';
 import { expect } from 'chai';
-// @ts-ignore Remove once the test utils are typed
-import { createRenderer } from '@mui/monorepo/test/utils';
+import { createRenderer } from '@mui-internal/test-utils';
+import { sleep } from 'test/utils/helperFn';
 import { createUseGridApiEventHandler } from './useGridApiEventHandler';
 import { FinalizationRegistryBasedCleanupTracking } from '../../utils/cleanupTracking/FinalizationRegistryBasedCleanupTracking';
 import { TimerBasedCleanupTracking } from '../../utils/cleanupTracking/TimerBasedCleanupTracking';
 
 const noop = spy();
-
-function sleep(time: number): Promise<void> {
-  return new Promise<void>((res) => {
-    setTimeout(res, time);
-  });
-}
 
 describe('useGridApiEventHandler', () => {
   const { render } = createRenderer();
@@ -22,7 +16,8 @@ describe('useGridApiEventHandler', () => {
     it('should unsubscribe event listeners registered by uncommitted components', async function test() {
       if (
         !/jsdom/.test(window.navigator.userAgent) ||
-        typeof FinalizationRegistry === 'undefined'
+        typeof FinalizationRegistry === 'undefined' ||
+        typeof global.gc === 'undefined'
       ) {
         // Needs ability to trigger the garbage collector and support for FinalizationRegistry (added in node 14)
         this.skip();
@@ -36,10 +31,10 @@ describe('useGridApiEventHandler', () => {
         current: { subscribeEvent: spy(() => unsubscribe) },
       };
 
-      const Test = () => {
+      function Test() {
         useGridApiEventHandler(apiRef as any, 'cellClick', noop);
         return null;
-      };
+      }
 
       const { unmount } = render(<Test />);
 
@@ -47,14 +42,14 @@ describe('useGridApiEventHandler', () => {
       // which makes 2 event listeners to be registered. Since the second render is never
       // committed (to simulate a trashed render in React 18), the effects also don't run, so we're
       // unable to unsubscribe the last listener using the cleanup function.
-      expect(apiRef.current.subscribeEvent.callCount).to.equal(2);
+      expect(apiRef.current.subscribeEvent.callCount).to.equal(3);
 
       unmount();
-      global.gc!(); // Triggers garbage collector
+      global.gc(); // Triggers garbage collector
       await sleep(50);
 
       // Ensure that both event listeners were unsubscribed
-      expect(unsubscribe.callCount).to.equal(2);
+      expect(unsubscribe.callCount).to.equal(3);
     });
   });
 
@@ -68,10 +63,10 @@ describe('useGridApiEventHandler', () => {
         current: { subscribeEvent: spy(() => unsubscribe) },
       };
 
-      const Test = () => {
+      function Test() {
         useGridApiEventHandler(apiRef as any, 'cellClick', noop);
         return null;
-      };
+      }
 
       const { unmount } = render(<Test />);
 
@@ -79,13 +74,13 @@ describe('useGridApiEventHandler', () => {
       // which makes 2 event listeners to be registered. Since the second render is never
       // committed (to simulate a trashed render in React 18), the effects also don't run, so we're
       // unable to unsubscribe the last listener using the cleanup function.
-      expect(apiRef.current.subscribeEvent.callCount).to.equal(2);
+      expect(apiRef.current.subscribeEvent.callCount).to.equal(3);
 
       unmount();
       await sleep(60);
 
       // Ensure that both event listeners were unsubscribed
-      expect(unsubscribe.callCount).to.equal(2);
+      expect(unsubscribe.callCount).to.equal(3);
     });
   });
 });

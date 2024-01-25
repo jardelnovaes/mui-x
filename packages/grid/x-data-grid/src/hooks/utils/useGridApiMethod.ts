@@ -1,35 +1,25 @@
 import * as React from 'react';
-import { GridApiCommon } from '../../models/api/gridApiCommon';
+import { GridPrivateApiCommon } from '../../models/api/gridApiCommon';
 
-export function useGridApiMethod<Api extends GridApiCommon, T extends Partial<Api>>(
-  apiRef: React.MutableRefObject<Api>,
-  apiMethods: T,
-  // TODO: Remove `apiName
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  apiName: string,
-) {
-  const apiMethodsRef = React.useRef(apiMethods);
-  const [apiMethodsNames] = React.useState(Object.keys(apiMethods));
+type GetPublicApiType<PrivateApi> = PrivateApi extends { getPublicApi: () => infer PublicApi }
+  ? PublicApi
+  : never;
 
-  const installMethods = React.useCallback(() => {
-    if (!apiRef.current) {
-      return;
-    }
-    apiMethodsNames.forEach((methodName) => {
-      if (!apiRef.current.hasOwnProperty(methodName)) {
-        apiRef.current[methodName as keyof GridApiCommon] = (...args: any[]) =>
-          apiMethodsRef.current[methodName as keyof GridApiCommon](...args);
-      }
-    });
-  }, [apiMethodsNames, apiRef]);
+export function useGridApiMethod<
+  PrivateApi extends GridPrivateApiCommon,
+  PublicApi extends GetPublicApiType<PrivateApi>,
+  PrivateOnlyApi extends Omit<PrivateApi, keyof PublicApi>,
+  V extends 'public' | 'private',
+  T extends V extends 'public' ? Partial<PublicApi> : Partial<PrivateOnlyApi>,
+>(privateApiRef: React.MutableRefObject<PrivateApi>, apiMethods: T, visibility: V) {
+  const isFirstRender = React.useRef(true);
 
   React.useEffect(() => {
-    apiMethodsRef.current = apiMethods;
-  }, [apiMethods]);
+    isFirstRender.current = false;
+    privateApiRef.current.register(visibility, apiMethods);
+  }, [privateApiRef, visibility, apiMethods]);
 
-  React.useEffect(() => {
-    installMethods();
-  }, [installMethods]);
-
-  installMethods();
+  if (isFirstRender.current) {
+    privateApiRef.current.register(visibility, apiMethods);
+  }
 }

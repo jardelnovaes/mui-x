@@ -1,11 +1,12 @@
 import * as React from 'react';
 import {
-  GridRowTreeNodeConfig,
   GridEventListener,
   GridCallbackDetails,
   GridRowParams,
   GridRowId,
   GridValidRowModel,
+  GridGroupNode,
+  GridFeatureMode,
 } from '@mui/x-data-grid';
 import {
   GridExperimentalFeatures,
@@ -15,14 +16,36 @@ import {
   DataGridPropsWithComplexDefaultValueBeforeProcessing,
 } from '@mui/x-data-grid/internals';
 import type { GridPinnedColumns } from '../hooks/features/columnPinning';
+import type { GridPinnedRowsProp } from '../hooks/features/rowPinning';
 import { GridApiPro } from './gridApiPro';
 import {
   GridGroupingColDefOverride,
   GridGroupingColDefOverrideParams,
 } from './gridGroupingColDefOverride';
 import { GridInitialStatePro } from './gridStatePro';
+import { GridProSlotsComponent, UncapitalizedGridProSlotsComponent } from './gridProSlotsComponent';
+import type { GridProSlotProps } from './gridProSlotProps';
+import { GridAutosizeOptions } from '../hooks';
 
-export interface GridExperimentalProFeatures extends GridExperimentalFeatures {}
+export interface GridExperimentalProFeatures extends GridExperimentalFeatures {
+  /**
+   * Enables the data grid to lazy load rows while scrolling.
+   */
+  lazyLoading: boolean;
+}
+
+interface DataGridProPropsWithComplexDefaultValueBeforeProcessing
+  extends Omit<DataGridPropsWithComplexDefaultValueBeforeProcessing, 'components'> {
+  /**
+   * Overridable components.
+   * @deprecated Use the `slots` prop instead.
+   */
+  components?: Partial<GridProSlotsComponent>;
+  /**
+   * Overridable components.
+   */
+  slots?: Partial<UncapitalizedGridProSlotsComponent>;
+}
 
 /**
  * The props users can give to the `DataGridProProps` component.
@@ -30,15 +53,14 @@ export interface GridExperimentalProFeatures extends GridExperimentalFeatures {}
 export interface DataGridProProps<R extends GridValidRowModel = any>
   extends Omit<
     Partial<DataGridProPropsWithDefaultValue> &
-      DataGridPropsWithComplexDefaultValueBeforeProcessing &
+      DataGridProPropsWithComplexDefaultValueBeforeProcessing &
       DataGridProPropsWithoutDefaultValue<R>,
     DataGridProForcedPropsKey
-  > {
-  /**
-   * Features under development.
-   * For each feature, if the flag is not explicitly set to `true`, the feature will be fully disabled and any property / method call will not have any effect.
-   */
-  experimentalFeatures?: Partial<GridExperimentalProFeatures>;
+  > {}
+
+interface DataGridProPropsWithComplexDefaultValueAfterProcessing
+  extends Omit<DataGridPropsWithComplexDefaultValueAfterProcessing, 'slots'> {
+  slots: UncapitalizedGridProSlotsComponent;
 }
 
 /**
@@ -46,8 +68,8 @@ export interface DataGridProProps<R extends GridValidRowModel = any>
  */
 export interface DataGridProProcessedProps<R extends GridValidRowModel = any>
   extends DataGridProPropsWithDefaultValue,
-    DataGridPropsWithComplexDefaultValueAfterProcessing,
-    DataGridProPropsWithoutDefaultValue<R> {}
+    DataGridProPropsWithComplexDefaultValueAfterProcessing,
+    Omit<DataGridProPropsWithoutDefaultValue<R>, 'componentsProps'> {}
 
 export type DataGridProForcedPropsKey = 'signature';
 
@@ -76,10 +98,20 @@ export interface DataGridProPropsWithDefaultValue extends DataGridPropsWithDefau
   /**
    * Determines if a group should be expanded after its creation.
    * This prop takes priority over the `defaultGroupingExpansionDepth` prop.
-   * @param {GridRowTreeNodeConfig} node The node of the group to test.
+   * @param {GridGroupNode} node The node of the group to test.
    * @returns {boolean} A boolean indicating if the group is expanded.
    */
-  isGroupExpandedByDefault?: (node: GridRowTreeNodeConfig) => boolean;
+  isGroupExpandedByDefault?: (node: GridGroupNode) => boolean;
+  /**
+   * If `true`, columns are autosized after the datagrid is mounted.
+   * @default false
+   */
+  autosizeOnMount: boolean;
+  /**
+   * If `true`, column autosizing on header separator double-click is disabled.
+   * @default false
+   */
+  disableAutosize: boolean;
   /**
    * If `true`, the column pinning is disabled.
    * @default false
@@ -98,29 +130,59 @@ export interface DataGridProPropsWithDefaultValue extends DataGridPropsWithDefau
   /**
    * Function that returns the height of the row detail panel.
    * @param {GridRowParams} params With all properties from [[GridRowParams]].
-   * @returns {number} The height in pixels.
+   * @returns {number | string} The height in pixels or "auto" to use the content height.
    * @default "() => 500"
    */
-  getDetailPanelHeight: (params: GridRowParams) => number;
+  getDetailPanelHeight: (params: GridRowParams) => number | 'auto';
   /**
    * If `true`, the reordering of rows is enabled.
    * @default false
    */
   rowReordering: boolean;
+  /**
+   * Loading rows can be processed on the server or client-side.
+   * Set it to 'client' if you would like enable infnite loading.
+   * Set it to 'server' if you would like to enable lazy loading.
+   * * @default "client"
+   */
+  rowsLoadingMode: GridFeatureMode;
+  /**
+   * If `true`, moving the mouse pointer outside the grid before releasing the mouse button
+   * in a column re-order action will not cause the column to jump back to its original position.
+   * @default false
+   */
+  keepColumnPositionIfDraggedOutside: boolean;
+  /**
+   * If `true`, enables the data grid filtering on header feature.
+   * @default false
+   */
+  unstable_headerFilters: boolean;
 }
 
 export interface DataGridProPropsWithoutDefaultValue<R extends GridValidRowModel = any>
-  extends Omit<DataGridPropsWithoutDefaultValue<R>, 'initialState'> {
+  extends Omit<
+    DataGridPropsWithoutDefaultValue<R>,
+    'initialState' | 'componentsProps' | 'slotProps'
+  > {
   /**
-   * The ref object that allows grid manipulation. Can be instantiated with [[useGridApiRef()]].
+   * The ref object that allows grid manipulation. Can be instantiated with `useGridApiRef()`.
    */
   apiRef?: React.MutableRefObject<GridApiPro>;
+  /**
+   * The options for autosize when user-initiated.
+   */
+  autosizeOptions?: GridAutosizeOptions;
   /**
    * The initial state of the DataGridPro.
    * The data in it will be set in the state on initialization but will not be controlled.
    * If one of the data in `initialState` is also being controlled, then the control state wins.
    */
   initialState?: GridInitialStatePro;
+  /**
+   * Unstable features, breaking changes might be introduced.
+   * For each feature, if the flag is not explicitly set to `true`, the feature will be fully disabled and any property / method call will not have any effect.
+   */
+  experimentalFeatures?: Partial<GridExperimentalProFeatures>;
   /**
    * Determines the path of a row in the tree data.
    * For instance, a row with the path ["A", "B"] is the child of the row with the path ["A"].
@@ -182,7 +244,7 @@ export interface DataGridProPropsWithoutDefaultValue<R extends GridValidRowModel
   /**
    * Function that returns the element to render in row detail.
    * @param {GridRowParams} params With all properties from [[GridRowParams]].
-   * @returns {JSX.Element} The row detail element.
+   * @returns {React.JSX.Element} The row detail element.
    */
   getDetailPanelContent?: (params: GridRowParams<R>) => React.ReactNode;
   /**
@@ -192,4 +254,24 @@ export interface DataGridProPropsWithoutDefaultValue<R extends GridValidRowModel
    * @param {GridCallbackDetails} details Additional details for this callback.
    */
   onRowOrderChange?: GridEventListener<'rowOrderChange'>;
+  /**
+   * Callback fired when rowCount is set and the next batch of virtualized rows is rendered.
+   * @param {GridFetchRowsParams} params With all properties from [[GridFetchRowsParams]].
+   * @param {MuiEvent<{}>} event The event object.
+   * @param {GridCallbackDetails} details Additional details for this callback.
+   */
+  onFetchRows?: GridEventListener<'fetchRows'>;
+  /**
+   * Rows data to pin on top or bottom.
+   */
+  pinnedRows?: GridPinnedRowsProp<R>;
+  /**
+   * Overridable components props dynamically passed to the component at rendering.
+   */
+  slotProps?: GridProSlotProps;
+  /**
+   * Overridable components props dynamically passed to the component at rendering.
+   * @deprecated Use the `slotProps` prop instead.
+   */
+  componentsProps?: GridProSlotProps;
 }

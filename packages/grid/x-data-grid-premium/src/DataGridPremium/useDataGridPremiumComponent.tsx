@@ -16,29 +16,27 @@ import {
   useGridPagination,
   paginationStateInitializer,
   useGridPreferencesPanel,
-  useGridEditing_new,
-  useGridEditing_old,
-  editingStateInitializer_old,
-  editingStateInitializer_new,
+  useGridEditing,
+  editingStateInitializer,
   useGridRows,
   useGridRowsPreProcessors,
   rowsStateInitializer,
   useGridRowsMeta,
   useGridParamsApi,
-  useGridSelection,
+  useGridRowSelection,
   useGridSorting,
   sortingStateInitializer,
   useGridScroll,
   useGridEvents,
   useGridDimensions,
   useGridStatePersistence,
-  useGridSelectionPreProcessors,
+  useGridRowSelectionPreProcessors,
   columnMenuStateInitializer,
   densityStateInitializer,
   focusStateInitializer,
   preferencePanelStateInitializer,
   rowsMetaStateInitializer,
-  selectionStateInitializer,
+  rowSelectionStateInitializer,
   useGridColumnReorder,
   columnReorderStateInitializer,
   useGridColumnResize,
@@ -50,38 +48,59 @@ import {
   useGridColumnPinningPreProcessors,
   useGridDetailPanel,
   detailPanelStateInitializer,
-  useGridDetailPanelCache,
   useGridDetailPanelPreProcessors,
   useGridInfiniteLoader,
   useGridColumnSpanning,
   useGridRowReorder,
   useGridRowReorderPreProcessors,
+  useGridRowPinning,
+  useGridRowPinningPreProcessors,
+  rowPinningStateInitializer,
+  useGridColumnGrouping,
+  columnGroupsStateInitializer,
+  useGridLazyLoader,
+  useGridLazyLoaderPreProcessors,
+  headerFilteringStateInitializer,
+  useGridHeaderFiltering,
+  virtualizationStateInitializer,
+  useGridVirtualization,
 } from '@mui/x-data-grid-pro/internals';
-
-import { GridApiPremium } from '../models/gridApiPremium';
+import { GridApiPremium, GridPrivateApiPremium } from '../models/gridApiPremium';
 import { DataGridPremiumProcessedProps } from '../models/dataGridPremiumProps';
-
 // Premium-only features
+import {
+  useGridAggregation,
+  aggregationStateInitializer,
+} from '../hooks/features/aggregation/useGridAggregation';
+import { useGridAggregationPreProcessors } from '../hooks/features/aggregation/useGridAggregationPreProcessors';
 import {
   useGridRowGrouping,
   rowGroupingStateInitializer,
 } from '../hooks/features/rowGrouping/useGridRowGrouping';
 import { useGridRowGroupingPreProcessors } from '../hooks/features/rowGrouping/useGridRowGroupingPreProcessors';
 import { useGridExcelExport } from '../hooks/features/export/useGridExcelExport';
+import {
+  cellSelectionStateInitializer,
+  useGridCellSelection,
+} from '../hooks/features/cellSelection/useGridCellSelection';
+import { useGridClipboardImport } from '../hooks/features/clipboard/useGridClipboardImport';
 
 export const useDataGridPremiumComponent = (
   inputApiRef: React.MutableRefObject<GridApiPremium> | undefined,
   props: DataGridPremiumProcessedProps,
 ) => {
-  const apiRef = useGridInitialization(inputApiRef, props);
+  const apiRef = useGridInitialization<GridPrivateApiPremium, GridApiPremium>(inputApiRef, props);
 
   /**
    * Register all pre-processors called during state initialization here.
    */
-  useGridSelectionPreProcessors(apiRef, props);
+  useGridRowSelectionPreProcessors(apiRef, props);
   useGridRowReorderPreProcessors(apiRef, props);
   useGridRowGroupingPreProcessors(apiRef, props);
   useGridTreeDataPreProcessors(apiRef, props);
+  useGridLazyLoaderPreProcessors(apiRef, props);
+  useGridRowPinningPreProcessors(apiRef);
+  useGridAggregationPreProcessors(apiRef, props);
   useGridDetailPanelPreProcessors(apiRef, props);
   // The column pinning `hydrateColumns` pre-processor must be after every other `hydrateColumns` pre-processors
   // Because it changes the order of the columns.
@@ -91,19 +110,17 @@ export const useDataGridPremiumComponent = (
   /**
    * Register all state initializers here.
    */
+  useGridInitializeState(headerFilteringStateInitializer, apiRef, props);
   useGridInitializeState(rowGroupingStateInitializer, apiRef, props);
-  useGridInitializeState(selectionStateInitializer, apiRef, props);
+  useGridInitializeState(aggregationStateInitializer, apiRef, props);
+  useGridInitializeState(rowSelectionStateInitializer, apiRef, props);
+  useGridInitializeState(cellSelectionStateInitializer, apiRef, props);
   useGridInitializeState(detailPanelStateInitializer, apiRef, props);
   useGridInitializeState(columnPinningStateInitializer, apiRef, props);
   useGridInitializeState(columnsStateInitializer, apiRef, props);
+  useGridInitializeState(rowPinningStateInitializer, apiRef, props);
   useGridInitializeState(rowsStateInitializer, apiRef, props);
-  useGridInitializeState(
-    props.experimentalFeatures?.newEditingApi
-      ? editingStateInitializer_new
-      : editingStateInitializer_old,
-    apiRef,
-    props,
-  );
+  useGridInitializeState(editingStateInitializer, apiRef, props);
   useGridInitializeState(focusStateInitializer, apiRef, props);
   useGridInitializeState(sortingStateInitializer, apiRef, props);
   useGridInitializeState(preferencePanelStateInitializer, apiRef, props);
@@ -114,26 +131,28 @@ export const useDataGridPremiumComponent = (
   useGridInitializeState(paginationStateInitializer, apiRef, props);
   useGridInitializeState(rowsMetaStateInitializer, apiRef, props);
   useGridInitializeState(columnMenuStateInitializer, apiRef, props);
+  useGridInitializeState(columnGroupsStateInitializer, apiRef, props);
+  useGridInitializeState(virtualizationStateInitializer, apiRef, props);
 
   useGridRowGrouping(apiRef, props);
+  useGridHeaderFiltering(apiRef, props);
   useGridTreeData(apiRef);
+  useGridAggregation(apiRef, props);
   useGridKeyboardNavigation(apiRef, props);
-  useGridSelection(apiRef, props);
-  useGridDetailPanel(apiRef, props);
+  useGridRowSelection(apiRef, props);
+  useGridCellSelection(apiRef, props);
   useGridColumnPinning(apiRef, props);
+  useGridRowPinning(apiRef, props);
   useGridColumns(apiRef, props);
   useGridRows(apiRef, props);
-  useGridParamsApi(apiRef);
+  useGridParamsApi(apiRef, props);
+  useGridDetailPanel(apiRef, props);
   useGridColumnSpanning(apiRef);
-  useGridDetailPanelCache(apiRef, props);
-
-  const useGridEditing = props.experimentalFeatures?.newEditingApi
-    ? useGridEditing_new
-    : useGridEditing_old;
+  useGridColumnGrouping(apiRef, props);
+  useGridClipboardImport(apiRef, props);
   useGridEditing(apiRef, props);
-
   useGridFocus(apiRef, props);
-  useGridPreferencesPanel(apiRef);
+  useGridPreferencesPanel(apiRef, props);
   useGridFilter(apiRef, props);
   useGridSorting(apiRef, props);
   useGridDensity(apiRef, props);
@@ -144,14 +163,16 @@ export const useDataGridPremiumComponent = (
   useGridRowReorder(apiRef, props);
   useGridScroll(apiRef, props);
   useGridInfiniteLoader(apiRef, props);
+  useGridLazyLoader(apiRef, props);
   useGridColumnMenu(apiRef);
-  useGridCsvExport(apiRef);
+  useGridCsvExport(apiRef, props);
   useGridPrintExport(apiRef, props);
-  useGridExcelExport(apiRef);
-  useGridClipboard(apiRef);
+  useGridExcelExport(apiRef, props);
+  useGridClipboard(apiRef, props);
   useGridDimensions(apiRef, props);
   useGridEvents(apiRef, props);
   useGridStatePersistence(apiRef);
+  useGridVirtualization(apiRef, props);
 
   return apiRef;
 };

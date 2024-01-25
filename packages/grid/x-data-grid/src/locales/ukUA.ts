@@ -25,7 +25,6 @@ const ukUAGrid: Partial<GridLocaleText> = {
   // Root
   noRowsLabel: 'Немає рядків',
   noResultsOverlayLabel: 'Дані не знайдено.',
-  errorOverlayDefaultLabel: 'Виявлено помилку.',
 
   // Density selector toolbar button text
   toolbarDensity: 'Висота рядка',
@@ -51,16 +50,16 @@ const ukUAGrid: Partial<GridLocaleText> = {
     }),
 
   // Quick filter toolbar field
-  // toolbarQuickFilterPlaceholder: 'Search...',
-  // toolbarQuickFilterLabel: 'Search',
-  // toolbarQuickFilterDeleteIconLabel: 'Clear',
+  toolbarQuickFilterPlaceholder: 'Пошук…',
+  toolbarQuickFilterLabel: 'Пошук',
+  toolbarQuickFilterDeleteIconLabel: 'Очистити',
 
   // Export selector toolbar button text
   toolbarExport: 'Експорт',
   toolbarExportLabel: 'Експорт',
   toolbarExportCSV: 'Завантажити у форматі CSV',
   toolbarExportPrint: 'Друк',
-  // toolbarExportExcel: 'Download as Excel',
+  toolbarExportExcel: 'Завантажити у форматі Excel',
 
   // Columns panel text
   columnsPanelTextFieldLabel: 'Знайти стовпець',
@@ -71,11 +70,10 @@ const ukUAGrid: Partial<GridLocaleText> = {
 
   // Filter panel text
   filterPanelAddFilter: 'Додати фільтр',
+  filterPanelRemoveAll: 'Видалити всі',
   filterPanelDeleteIconLabel: 'Видалити',
-  // filterPanelLinkOperator: 'Logic operator',
-  filterPanelOperators: 'Оператори',
-
-  // TODO v6: rename to filterPanelOperator
+  filterPanelLogicOperator: 'Логічна функція',
+  filterPanelOperator: 'Оператори',
   filterPanelOperatorAnd: 'І',
   filterPanelOperatorOr: 'Або',
   filterPanelColumns: 'Стовпці',
@@ -95,7 +93,34 @@ const ukUAGrid: Partial<GridLocaleText> = {
   filterOperatorOnOrBefore: 'менше або дорівнює',
   filterOperatorIsEmpty: 'порожній',
   filterOperatorIsNotEmpty: 'не порожній',
-  // filterOperatorIsAnyOf: 'is any of',
+  filterOperatorIsAnyOf: 'будь-що із',
+  'filterOperator=': '=',
+  'filterOperator!=': '!=',
+  'filterOperator>': '>',
+  'filterOperator>=': '>=',
+  'filterOperator<': '<',
+  'filterOperator<=': '<=',
+
+  // Header filter operators text
+  headerFilterOperatorContains: 'Містить',
+  headerFilterOperatorEquals: 'Дорівнює',
+  headerFilterOperatorStartsWith: 'Починається з',
+  headerFilterOperatorEndsWith: 'Закінчується на',
+  headerFilterOperatorIs: 'Дорівнює',
+  headerFilterOperatorNot: 'Не дорівнює',
+  headerFilterOperatorAfter: 'Після',
+  headerFilterOperatorOnOrAfter: 'Після (включаючи)',
+  headerFilterOperatorBefore: 'Раніше',
+  headerFilterOperatorOnOrBefore: 'Раніше (включаючи)',
+  headerFilterOperatorIsEmpty: 'Порожнє',
+  headerFilterOperatorIsNotEmpty: 'Не порожнє',
+  headerFilterOperatorIsAnyOf: 'Будь-що із',
+  'headerFilterOperator=': 'Дорівнює',
+  'headerFilterOperator!=': 'Не дорівнює',
+  'headerFilterOperator>': 'Більше ніж',
+  'headerFilterOperator>=': 'Більше або дорівнює',
+  'headerFilterOperator<': 'Менше ніж',
+  'headerFilterOperator<=': 'Менше або дорівнює',
 
   // Filter values text
   filterValueAny: 'будь-який',
@@ -105,6 +130,7 @@ const ukUAGrid: Partial<GridLocaleText> = {
   // Column menu text
   columnMenuLabel: 'Меню',
   columnMenuShowColumns: 'Показати стовпці',
+  columnMenuManageColumns: 'Керування стовпцями',
   columnMenuFilter: 'Фільтр',
   columnMenuHideColumn: 'Приховати',
   columnMenuUnsort: 'Скасувати сортування',
@@ -138,10 +164,10 @@ const ukUAGrid: Partial<GridLocaleText> = {
 
   // Checkbox selection text
   checkboxSelectionHeaderName: 'Вибір прапорця',
-  // checkboxSelectionSelectAllRows: 'Select all rows',
-  // checkboxSelectionUnselectAllRows: 'Unselect all rows',
-  // checkboxSelectionSelectRow: 'Select row',
-  // checkboxSelectionUnselectRow: 'Unselect row',
+  checkboxSelectionSelectAllRows: 'Вибрати всі рядки',
+  checkboxSelectionUnselectAllRows: 'Скасувати вибір всіх рядків',
+  checkboxSelectionSelectRow: 'Вибрати рядок',
+  checkboxSelectionUnselectRow: 'Скасувати вибір рядка',
 
   // Boolean cell text
   booleanCellTrueLabel: 'так',
@@ -161,16 +187,25 @@ const ukUAGrid: Partial<GridLocaleText> = {
   treeDataCollapse: 'приховати дочірні елементи',
 
   // Grouping columns
-  // groupingColumnHeaderName: 'Group',
-  // groupColumn: name => `Group by ${name}`,
-  // unGroupColumn: name => `Stop grouping by ${name}`,
+  groupingColumnHeaderName: 'Група',
+  groupColumn: (name) => `Групувати за ${name}`,
+  unGroupColumn: (name) => `Відмінити групування за ${name}`,
 
   // Master/detail
-  // expandDetailPanel: 'Expand',
-  // collapseDetailPanel: 'Collapse',
+  detailPanelToggle: 'Перемикач панелі деталей',
+  expandDetailPanel: 'Показати',
+  collapseDetailPanel: 'Приховати',
 
   // Row reordering text
-  // rowReorderingHeaderName: 'Row reordering',
+  rowReorderingHeaderName: 'Порядок рядків',
+
+  // Aggregation
+  aggregationMenuItemHeader: 'Агрегація',
+  aggregationFunctionLabelSum: 'сума',
+  aggregationFunctionLabelAvg: 'сер',
+  aggregationFunctionLabelMin: 'мін',
+  aggregationFunctionLabelMax: 'макс',
+  aggregationFunctionLabelSize: 'кількість',
 };
 
 export const ukUA: Localization = getGridLocalization(ukUAGrid, ukUACore);

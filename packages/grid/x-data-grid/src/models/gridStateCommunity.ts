@@ -2,6 +2,7 @@ import type {
   GridColumnMenuState,
   GridColumnsInitialState,
   GridColumnsState,
+  GridColumnsGroupingState,
   GridDensityState,
   GridFilterInitialState,
   GridFilterState,
@@ -14,29 +15,35 @@ import type {
   GridSortingInitialState,
   GridSortingState,
   GridTabIndexState,
+  GridVirtualizationState,
 } from '../hooks';
 import type { GridRowsMetaState } from '../hooks/features/rows/gridRowsMetaState';
-import type { GridEditRowsModel } from './gridEditRowModel';
-import type { GridSelectionModel } from './gridSelectionModel';
+import type { GridEditingState } from './gridEditRowModel';
+import { GridHeaderFilteringState } from './gridHeaderFilteringModel';
+import type { GridRowSelectionModel } from './gridRowSelectionModel';
+import type { GridVisibleRowsLookupState } from '../hooks/features/filter/gridFilterState';
 
 /**
  * The state of `DataGrid`.
  */
 export interface GridStateCommunity {
   rows: GridRowsState;
+  visibleRowsLookup: GridVisibleRowsLookupState;
   rowsMeta: GridRowsMetaState;
-  editRows: GridEditRowsModel;
+  editRows: GridEditingState;
+  headerFiltering: GridHeaderFilteringState;
   pagination: GridPaginationState;
   columns: GridColumnsState;
+  columnGrouping: GridColumnsGroupingState;
   columnMenu: GridColumnMenuState;
   sorting: GridSortingState;
   focus: GridFocusState;
   tabIndex: GridTabIndexState;
-  selection: GridSelectionModel;
+  rowSelection: GridRowSelectionModel;
   filter: GridFilterState;
   preferencePanel: GridPreferencePanelState;
   density: GridDensityState;
-  error?: any;
+  virtualization: GridVirtualizationState;
 }
 
 /**

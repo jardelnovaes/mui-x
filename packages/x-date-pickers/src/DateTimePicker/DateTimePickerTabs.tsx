@@ -1,26 +1,31 @@
 import * as React from 'react';
+import clsx from 'clsx';
+import PropTypes from 'prop-types';
 import Tab from '@mui/material/Tab';
 import Tabs, { tabsClasses } from '@mui/material/Tabs';
-import { styled } from '@mui/material/styles';
-import { Time, DateRange } from '../internals/components/icons';
-import {
-  WrapperVariantContext,
-  WrapperVariant,
-} from '../internals/components/wrappers/WrapperVariantContext';
-import { CalendarOrClockPickerView } from '../internals/models';
+import { styled, useThemeProps } from '@mui/material/styles';
+import composeClasses from '@mui/utils/composeClasses';
+import { TimeIcon, DateRangeIcon } from '../icons';
+import { DateOrTimeViewWithMeridiem } from '../internals/models';
 import { useLocaleText } from '../internals/hooks/useUtils';
+import {
+  DateTimePickerTabsClasses,
+  getDateTimePickerTabsUtilityClass,
+} from './dateTimePickerTabsClasses';
+import { BaseTabsProps, ExportedBaseTabsProps } from '../internals/models/props/tabs';
+import { isDatePickerView } from '../internals/utils/date-utils';
 
 type TabValue = 'date' | 'time';
 
-const viewToTab = (openView: CalendarOrClockPickerView): TabValue => {
-  if (['day', 'month', 'year'].includes(openView)) {
+const viewToTab = (view: DateOrTimeViewWithMeridiem): TabValue => {
+  if (isDatePickerView(view)) {
     return 'date';
   }
 
   return 'time';
 };
 
-const tabToView = (tab: TabValue): CalendarOrClockPickerView => {
+const tabToView = (tab: TabValue): DateOrTimeViewWithMeridiem => {
   if (tab === 'date') {
     return 'day';
   }
@@ -28,55 +33,101 @@ const tabToView = (tab: TabValue): CalendarOrClockPickerView => {
   return 'hours';
 };
 
-export interface DateTimePickerTabsProps {
-  dateRangeIcon?: React.ReactNode;
-  onChange: (view: CalendarOrClockPickerView) => void;
+export interface ExportedDateTimePickerTabsProps extends ExportedBaseTabsProps {
+  /**
+   * Toggles visibility of the tabs allowing view switching.
+   * @default `window.innerHeight < 667` for `DesktopDateTimePicker` and `MobileDateTimePicker`, `displayStaticWrapperAs === 'desktop'` for `StaticDateTimePicker`
+   */
+  hidden?: boolean;
+  /**
+   * Date tab icon.
+   * @default DateRange
+   */
+  dateIcon?: React.ReactNode;
+  /**
+   * Time tab icon.
+   * @default Time
+   */
   timeIcon?: React.ReactNode;
-  view: CalendarOrClockPickerView;
 }
 
-type OwnerState = DateTimePickerTabsProps & { wrapperVariant: WrapperVariant };
+export interface DateTimePickerTabsProps
+  extends ExportedDateTimePickerTabsProps,
+    BaseTabsProps<DateOrTimeViewWithMeridiem> {
+  /**
+   * Override or extend the styles applied to the component.
+   */
+  classes?: Partial<DateTimePickerTabsClasses>;
+}
 
-const DateTimePickerTabsRoot = styled(Tabs)<{ ownerState: OwnerState }>(
-  ({ ownerState, theme }) => ({
-    boxShadow: `0 -1px 0 0 inset ${theme.palette.divider}`,
-    ...(ownerState.wrapperVariant === 'desktop' && {
-      order: 1,
-      boxShadow: `0 1px 0 0 inset ${theme.palette.divider}`,
-      [`& .${tabsClasses.indicator}`]: {
-        bottom: 'auto',
-        top: 0,
-      },
-    }),
-  }),
-);
+const useUtilityClasses = (ownerState: DateTimePickerTabsProps) => {
+  const { classes } = ownerState;
+  const slots = {
+    root: ['root'],
+  };
+
+  return composeClasses(slots, getDateTimePickerTabsUtilityClass, classes);
+};
+
+const DateTimePickerTabsRoot = styled(Tabs, {
+  name: 'MuiDateTimePickerTabs',
+  slot: 'Root',
+  overridesResolver: (_, styles) => styles.root,
+})<{ ownerState: DateTimePickerTabsProps }>(({ theme }) => ({
+  boxShadow: `0 -1px 0 0 inset ${(theme.vars || theme).palette.divider}`,
+  '&:last-child': {
+    boxShadow: `0 1px 0 0 inset ${(theme.vars || theme).palette.divider}`,
+    [`& .${tabsClasses.indicator}`]: {
+      bottom: 'auto',
+      top: 0,
+    },
+  },
+}));
 
 /**
- * @ignore - internal component.
+ * Demos:
+ *
+ * - [DateTimePicker](https://mui.com/x/react-date-pickers/date-time-picker/)
+ * - [Custom slots and subcomponents](https://mui.com/x/react-date-pickers/custom-components/)
+ *
+ * API:
+ *
+ * - [DateTimePickerTabs API](https://mui.com/x/api/date-pickers/date-time-picker-tabs/)
  */
-export const DateTimePickerTabs = (props: DateTimePickerTabsProps) => {
-  const { dateRangeIcon = <DateRange />, onChange, timeIcon = <Time />, view } = props;
+const DateTimePickerTabs = function DateTimePickerTabs(inProps: DateTimePickerTabsProps) {
+  const props = useThemeProps({ props: inProps, name: 'MuiDateTimePickerTabs' });
+  const {
+    dateIcon = <DateRangeIcon />,
+    onViewChange,
+    timeIcon = <TimeIcon />,
+    view,
+    hidden = typeof window === 'undefined' || window.innerHeight < 667,
+    className,
+  } = props;
 
   const localeText = useLocaleText();
-
-  const wrapperVariant = React.useContext(WrapperVariantContext);
-  const ownerState = { ...props, wrapperVariant };
+  const classes = useUtilityClasses(props);
 
   const handleChange = (event: React.SyntheticEvent, value: TabValue) => {
-    onChange(tabToView(value));
+    onViewChange(tabToView(value));
   };
+
+  if (hidden) {
+    return null;
+  }
 
   return (
     <DateTimePickerTabsRoot
-      ownerState={ownerState}
+      ownerState={props}
       variant="fullWidth"
       value={viewToTab(view)}
       onChange={handleChange}
+      className={clsx(className, classes.root)}
     >
       <Tab
         value="date"
         aria-label={localeText.dateTableLabel}
-        icon={<React.Fragment>{dateRangeIcon}</React.Fragment>}
+        icon={<React.Fragment>{dateIcon}</React.Fragment>}
       />
       <Tab
         value="time"
@@ -86,3 +137,43 @@ export const DateTimePickerTabs = (props: DateTimePickerTabsProps) => {
     </DateTimePickerTabsRoot>
   );
 };
+
+DateTimePickerTabs.propTypes = {
+  // ----------------------------- Warning --------------------------------
+  // | These PropTypes are generated from the TypeScript type definitions |
+  // | To update them edit the TypeScript types and run "yarn proptypes"  |
+  // ----------------------------------------------------------------------
+  /**
+   * Override or extend the styles applied to the component.
+   */
+  classes: PropTypes.object,
+  className: PropTypes.string,
+  /**
+   * Date tab icon.
+   * @default DateRange
+   */
+  dateIcon: PropTypes.node,
+  /**
+   * Toggles visibility of the tabs allowing view switching.
+   * @default `window.innerHeight < 667` for `DesktopDateTimePicker` and `MobileDateTimePicker`, `displayStaticWrapperAs === 'desktop'` for `StaticDateTimePicker`
+   */
+  hidden: PropTypes.bool,
+  /**
+   * Callback called when a tab is clicked
+   * @template TView
+   * @param {TView} view The view to open
+   */
+  onViewChange: PropTypes.func.isRequired,
+  /**
+   * Time tab icon.
+   * @default Time
+   */
+  timeIcon: PropTypes.node,
+  /**
+   * Currently visible picker view.
+   */
+  view: PropTypes.oneOf(['day', 'hours', 'meridiem', 'minutes', 'month', 'seconds', 'year'])
+    .isRequired,
+} as any;
+
+export { DateTimePickerTabs };

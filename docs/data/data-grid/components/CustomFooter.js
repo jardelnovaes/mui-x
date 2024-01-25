@@ -1,18 +1,17 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import { useDemoData } from '@mui/x-data-grid-generator';
 import { DataGrid } from '@mui/x-data-grid';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 
-function CustomFooterStatusComponent(props) {
+export function CustomFooterStatusComponent(props) {
   return (
-    <Box sx={{ padding: '10px', display: 'flex' }}>
+    <Box sx={{ p: 1, display: 'flex' }}>
       <FiberManualRecordIcon
         fontSize="small"
         sx={{
-          mr: 2,
+          mr: 1,
           color: props.status === 'connected' ? '#4caf50' : '#d9182e',
         }}
       />
@@ -21,12 +20,6 @@ function CustomFooterStatusComponent(props) {
   );
 }
 
-CustomFooterStatusComponent.propTypes = {
-  status: PropTypes.oneOf(['connected', 'disconnected']).isRequired,
-};
-
-export { CustomFooterStatusComponent };
-
 export default function CustomFooter() {
   const [status, setStatus] = React.useState('connected');
   const { data } = useDemoData({
@@ -34,22 +27,20 @@ export default function CustomFooter() {
     rowLength: 4,
     maxColumns: 6,
   });
-
   return (
-    <Box sx={{ width: 1 }}>
-      <Box sx={{ height: 350, width: 1, mb: 2 }}>
+    <Box sx={{ width: '100%' }}>
+      <Box sx={{ height: 350, width: '100%', mb: 1 }}>
         <DataGrid
           {...data}
-          components={{
-            Footer: CustomFooterStatusComponent,
+          slots={{
+            footer: CustomFooterStatusComponent,
           }}
-          componentsProps={{
+          slotProps={{
             footer: { status },
           }}
         />
       </Box>
       <Button
-        color="primary"
         variant="contained"
         onClick={() =>
           setStatus((current) =>

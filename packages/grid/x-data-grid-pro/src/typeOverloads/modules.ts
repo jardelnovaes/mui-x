@@ -1,10 +1,25 @@
 import { GridRowId } from '@mui/x-data-grid';
-import type { GridRowScrollEndParams, GridRowOrderChangeParams } from '../models';
+import type {
+  GridRowScrollEndParams,
+  GridRowOrderChangeParams,
+  GridFetchRowsParams,
+} from '../models';
+import type { GridHeaderFilterCellProps } from '../components/headerFiltering/GridHeaderFilterCell';
 import type {
   GridColumnPinningInternalCache,
   GridPinnedColumns,
 } from '../hooks/features/columnPinning/gridColumnPinningInterface';
 import type { GridCanBeReorderedPreProcessingContext } from '../hooks/features/columnReorder/columnReorderInterfaces';
+import { GridRowPinningInternalCache } from '../hooks/features/rowPinning/gridRowPinningInterface';
+
+export interface GridColDefPro {
+  /**
+   * Allows to render a component in the column header filter cell.
+   * @param {GridHeaderFilterCellProps} params Object containing parameters for the renderer.
+   * @returns {React.ReactNode} The element to be rendered.
+   */
+  renderHeaderFilter?: (params: GridHeaderFilterCellProps) => React.ReactNode;
+}
 
 export interface GridControlledStateEventLookupPro {
   /**
@@ -28,6 +43,10 @@ export interface GridEventLookupPro {
    * Fired when the user ends reordering a row.
    */
   rowOrderChange: { params: GridRowOrderChangeParams };
+  /**
+   * Fired when a new batch of rows is requested to be loaded. Called with a [[GridFetchRowsParams]] object.
+   */
+  fetchRows: { params: GridFetchRowsParams };
 }
 
 export interface GridPipeProcessingLookupPro {
@@ -39,6 +58,7 @@ export interface GridPipeProcessingLookupPro {
 
 export interface GridApiCachesPro {
   columnPinning: GridColumnPinningInternalCache;
+  pinnedRows: GridRowPinningInternalCache;
 }
 
 declare module '@mui/x-data-grid' {
@@ -51,4 +71,6 @@ declare module '@mui/x-data-grid' {
 
 declare module '@mui/x-data-grid/internals' {
   interface GridApiCaches extends GridApiCachesPro {}
+
+  interface GridBaseColDef extends GridColDefPro {}
 }

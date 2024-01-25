@@ -2,18 +2,26 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import { useDemoData } from '@mui/x-data-grid-generator';
-import { DataGrid } from '@mui/x-data-grid';
+import { DataGrid, GridSlotsComponentsProps } from '@mui/x-data-grid';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 
-export function CustomFooterStatusComponent(props: {
-  status: 'connected' | 'disconnected';
-}) {
+type FooterStatus = 'connected' | 'disconnected';
+
+declare module '@mui/x-data-grid' {
+  interface FooterPropsOverrides {
+    status: FooterStatus;
+  }
+}
+
+export function CustomFooterStatusComponent(
+  props: NonNullable<GridSlotsComponentsProps['footer']>,
+) {
   return (
-    <Box sx={{ padding: '10px', display: 'flex' }}>
+    <Box sx={{ p: 1, display: 'flex' }}>
       <FiberManualRecordIcon
         fontSize="small"
         sx={{
-          mr: 2,
+          mr: 1,
           color: props.status === 'connected' ? '#4caf50' : '#d9182e',
         }}
       />
@@ -23,27 +31,26 @@ export function CustomFooterStatusComponent(props: {
 }
 
 export default function CustomFooter() {
-  const [status, setStatus] = React.useState('connected');
+  const [status, setStatus] = React.useState<FooterStatus>('connected');
   const { data } = useDemoData({
     dataSet: 'Employee',
     rowLength: 4,
     maxColumns: 6,
   });
   return (
-    <Box sx={{ width: 1 }}>
-      <Box sx={{ height: 350, width: 1, mb: 2 }}>
+    <Box sx={{ width: '100%' }}>
+      <Box sx={{ height: 350, width: '100%', mb: 1 }}>
         <DataGrid
           {...data}
-          components={{
-            Footer: CustomFooterStatusComponent,
+          slots={{
+            footer: CustomFooterStatusComponent,
           }}
-          componentsProps={{
+          slotProps={{
             footer: { status },
           }}
         />
       </Box>
       <Button
-        color="primary"
         variant="contained"
         onClick={() =>
           setStatus((current) =>

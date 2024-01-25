@@ -2,7 +2,7 @@ import * as fse from 'fs-extra';
 import { expect } from 'chai';
 import * as path from 'path';
 import * as childProcess from 'child_process';
-import * as playwright from 'playwright';
+import { chromium } from '@playwright/test';
 
 function sleep(timeoutMS) {
   return new Promise((resolve) => {
@@ -14,7 +14,7 @@ async function main() {
   const baseUrl = 'http://localhost:5001';
   const screenshotDir = path.resolve(__dirname, './screenshots/chrome');
 
-  const browser = await playwright.chromium.launch({
+  const browser = await chromium.launch({
     args: ['--font-render-hinting=none'],
     // otherwise the loaded google Roboto font isn't applied
     headless: false,
@@ -45,7 +45,7 @@ async function main() {
   });
 
   // Wait for all requests to finish.
-  // This should load shared ressources such as fonts.
+  // This should load shared resources such as fonts.
   await page.goto(`${baseUrl}#no-dev`, { waitUntil: 'networkidle0' });
 
   // Simulate portrait mode for date pickers.
@@ -66,6 +66,16 @@ async function main() {
 
   // prepare screenshots
   await fse.emptyDir(screenshotDir);
+
+  function navigateToTest(testIndex) {
+    // Use client-side routing which is much faster than full page navigation via page.goto().
+    // Could become an issue with test isolation.
+    // If tests are flaky due to global pollution switch to page.goto(route);
+    // puppeteers built-in click() times out
+    return page.$eval(`#tests li:nth-of-type(${testIndex}) a`, (link) => {
+      link.click();
+    });
+  }
 
   describe('visual regressions', () => {
     after(async () => {
@@ -91,24 +101,21 @@ async function main() {
           this.timeout(6000);
         }
 
-        // Use client-side routing which is much faster than full page navigation via page.goto().
-        // Could become an issue with test isolation.
-        // If tests are flaky due to global pollution switch to page.goto(route);
-        // puppeteers built-in click() times out
-        await page.$eval(`#tests li:nth-of-type(${index + 1}) a`, (link) => {
-          link.click();
-        });
+        try {
+          await navigateToTest(index + 1);
+        } catch (error) {
+          // When one demo crashes, the page becomes empty and there are no links to demos,
+          // so navigation to the next demo throws an error.
+          // Reloading the page fixes this.
+          await page.reload();
+          await navigateToTest(index + 1);
+        }
         // Move cursor offscreen to not trigger unwanted hover effects.
         page.mouse.move(0, 0);
 
-        if (
-          pathURL.startsWith('/docs-data-grid-filtering') &&
-          !/(ServerFilterGrid|CustomMultiValueOperator)$/.test(pathURL) // These cases don't render content
-        ) {
-          // Wait for the flags to load
-          await page.waitForResponse((response) =>
-            response.url().startsWith('https://flagcdn.com'),
-          );
+        if (/^\docs-charts-.*/.test(pathURL)) {
+          // Run one tick of the clock to get the final animation state
+          await sleep(10);
         }
 
         const screenshotPath = path.resolve(screenshotDir, `${route.replace(baseUrl, '.')}.png`);
@@ -116,6 +123,22 @@ async function main() {
 
         const testcase = await page.waitForSelector(
           '[data-testid="testcase"]:not([aria-busy="true"])',
+        );
+
+        // Wait for the flags to load
+        await page.waitForFunction(
+          () => {
+            const images = Array.from(document.querySelectorAll('img'));
+            return images.every((img) => {
+              if (!img.complete && img.loading === 'lazy') {
+                // Force lazy-loaded images to load
+                img.setAttribute('loading', 'eager');
+              }
+              return img.complete;
+            });
+          },
+          undefined,
+          { timeout: 1000 },
         );
 
         await testcase.screenshot({ path: screenshotPath, type: 'png' });
@@ -128,7 +151,7 @@ async function main() {
       });
     });
 
-    it('should position the headers matching the columns', async function test() {
+    it('should position the headers matching the columns', async () => {
       const route = `${baseUrl}/docs-data-grid-virtualization/ColumnVirtualizationGrid`;
       const screenshotPath = path.resolve(
         screenshotDir,
@@ -155,9 +178,9 @@ async function main() {
     });
 
     it('should take a screenshot of the print preview', async function test() {
-      this.timeout(10000);
+      this.timeout(20000);
 
-      const route = `${baseUrl}/stories-grid-toolbar/PrintExportSnap`;
+      const route = `${baseUrl}/docs-data-grid-export/ExportDefaultToolbar`;
       const screenshotPath = path.resolve(screenshotDir, `${route.replace(baseUrl, '.')}Print.png`);
       await fse.ensureDir(path.dirname(screenshotPath));
 
@@ -173,21 +196,25 @@ async function main() {
 
       // Click the print export option from the export menu in the toolbar.
       await page.$eval(`li[role="menuitem"]:last-child`, (printButton) => {
-        printButton.click();
+        // Trigger the action async because window.print() is blocking the main thread
+        // like window.alert() is.
+        setTimeout(() => {
+          printButton.click();
+        });
       });
 
-      await sleep(2000);
+      await sleep(4000);
 
       return new Promise((resolve, reject) => {
         // See https://ffmpeg.org/ffmpeg-devices.html#x11grab
-        const args = `-y -f x11grab -framerate 1 -video_size 460x400 -i :99.0+90,81 -vframes 1 ${screenshotPath}`;
+        const args = `-y -f x11grab -framerate 1 -video_size 460x400 -i :99.0+90,85 -vframes 1 ${screenshotPath}`;
         const ffmpeg = childProcess.spawn('ffmpeg', args.split(' '));
 
         ffmpeg.on('close', (code) => {
           if (code === 0) {
             resolve();
           } else {
-            reject();
+            reject(code);
           }
         });
       });

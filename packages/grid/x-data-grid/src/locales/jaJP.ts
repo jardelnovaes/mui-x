@@ -6,14 +6,13 @@ const jaJPGrid: Partial<GridLocaleText> = {
   // Root
   noRowsLabel: '行がありません。',
   noResultsOverlayLabel: '結果がありません。',
-  errorOverlayDefaultLabel: 'エラーが発生しました。',
 
   // Density selector toolbar button text
   toolbarDensity: '行間隔',
   toolbarDensityLabel: '行間隔',
   toolbarDensityCompact: 'コンパクト',
   toolbarDensityStandard: '標準',
-  toolbarDensityComfortable: 'ひろめ',
+  toolbarDensityComfortable: '広め',
 
   // Columns selector toolbar button text
   toolbarColumns: '列一覧',
@@ -27,36 +26,35 @@ const jaJPGrid: Partial<GridLocaleText> = {
   toolbarFiltersTooltipActive: (count) => `${count}件のフィルターを適用中`,
 
   // Quick filter toolbar field
-  // toolbarQuickFilterPlaceholder: 'Search...',
-  // toolbarQuickFilterLabel: 'Search',
-  // toolbarQuickFilterDeleteIconLabel: 'Clear',
+  toolbarQuickFilterPlaceholder: '検索…',
+  toolbarQuickFilterLabel: '検索',
+  toolbarQuickFilterDeleteIconLabel: 'クリア',
 
   // Export selector toolbar button text
   toolbarExport: 'エクスポート',
   toolbarExportLabel: 'エクスポート',
   toolbarExportCSV: 'CSVダウンロード',
-  // toolbarExportPrint: 'Print',
-  // toolbarExportExcel: 'Download as Excel',
+  toolbarExportPrint: '印刷',
+  toolbarExportExcel: 'Excelダウンロード',
 
   // Columns panel text
   columnsPanelTextFieldLabel: '列検索',
-  columnsPanelTextFieldPlaceholder: '検索クエリを入力...',
+  columnsPanelTextFieldPlaceholder: '検索クエリを入力…',
   columnsPanelDragIconLabel: '列並べ替え',
   columnsPanelShowAllButton: 'すべて表示',
   columnsPanelHideAllButton: 'すべて非表示',
 
   // Filter panel text
   filterPanelAddFilter: 'フィルター追加',
+  filterPanelRemoveAll: 'すべて削除',
   filterPanelDeleteIconLabel: '削除',
-  // filterPanelLinkOperator: 'Logic operator',
-  filterPanelOperators: 'オペレータ',
-
-  // TODO v6: rename to filterPanelOperator
+  filterPanelLogicOperator: '論理演算子',
+  filterPanelOperator: '演算子',
   filterPanelOperatorAnd: 'And',
   filterPanelOperatorOr: 'Or',
   filterPanelColumns: '列',
   filterPanelInputLabel: '値',
-  filterPanelInputPlaceholder: '値を入力...',
+  filterPanelInputPlaceholder: '値を入力…',
 
   // Filter operators text
   filterOperatorContains: '...を含む',
@@ -71,16 +69,44 @@ const jaJPGrid: Partial<GridLocaleText> = {
   filterOperatorOnOrBefore: '...以前',
   filterOperatorIsEmpty: '...空である',
   filterOperatorIsNotEmpty: '...空でない',
-  // filterOperatorIsAnyOf: 'is any of',
+  filterOperatorIsAnyOf: '...のいずれか',
+  'filterOperator=': '=',
+  'filterOperator!=': '!=',
+  'filterOperator>': '>',
+  'filterOperator>=': '>=',
+  'filterOperator<': '<',
+  'filterOperator<=': '<=',
+
+  // Header filter operators text
+  headerFilterOperatorContains: '含む',
+  headerFilterOperatorEquals: '等しい',
+  headerFilterOperatorStartsWith: 'で始まる',
+  headerFilterOperatorEndsWith: 'で終わる',
+  headerFilterOperatorIs: 'である',
+  headerFilterOperatorNot: 'ではない',
+  headerFilterOperatorAfter: '...より後ろ',
+  headerFilterOperatorOnOrAfter: '...以降',
+  headerFilterOperatorBefore: '...より前',
+  headerFilterOperatorOnOrBefore: '...以前',
+  headerFilterOperatorIsEmpty: '空白',
+  headerFilterOperatorIsNotEmpty: '空白ではない',
+  headerFilterOperatorIsAnyOf: 'いずれか',
+  'headerFilterOperator=': '等しい',
+  'headerFilterOperator!=': '等しくない',
+  'headerFilterOperator>': 'より大きい',
+  'headerFilterOperator>=': '以上',
+  'headerFilterOperator<': '未満',
+  'headerFilterOperator<=': '以下',
 
   // Filter values text
-  // filterValueAny: 'any',
-  // filterValueTrue: 'true',
-  // filterValueFalse: 'false',
+  filterValueAny: 'いずれか',
+  filterValueTrue: '真',
+  filterValueFalse: '偽',
 
   // Column menu text
   columnMenuLabel: 'メニュー',
   columnMenuShowColumns: '列表示',
+  columnMenuManageColumns: '列管理',
   columnMenuFilter: 'フィルター',
   columnMenuHideColumn: '列非表示',
   columnMenuUnsort: 'ソート解除',
@@ -104,39 +130,48 @@ const jaJPGrid: Partial<GridLocaleText> = {
 
   // Checkbox selection text
   checkboxSelectionHeaderName: 'チェックボックス',
-  // checkboxSelectionSelectAllRows: 'Select all rows',
-  // checkboxSelectionUnselectAllRows: 'Unselect all rows',
-  // checkboxSelectionSelectRow: 'Select row',
-  // checkboxSelectionUnselectRow: 'Unselect row',
+  checkboxSelectionSelectAllRows: 'すべての行を選択',
+  checkboxSelectionUnselectAllRows: 'すべての行選択を解除',
+  checkboxSelectionSelectRow: '行を選択',
+  checkboxSelectionUnselectRow: '行選択を解除',
 
   // Boolean cell text
   booleanCellTrueLabel: '真',
   booleanCellFalseLabel: '偽',
 
   // Actions cell more text
-  // actionsCellMore: 'more',
+  actionsCellMore: 'もっと見る',
 
   // Column pinning text
-  // pinToLeft: 'Pin to left',
-  // pinToRight: 'Pin to right',
-  // unpin: 'Unpin',
+  pinToLeft: '左側に固定',
+  pinToRight: '右側に固定',
+  unpin: '固定解除',
 
   // Tree Data
-  // treeDataGroupingHeaderName: 'Group',
-  // treeDataExpand: 'see children',
-  // treeDataCollapse: 'hide children',
+  treeDataGroupingHeaderName: 'グループ',
+  treeDataExpand: '展開',
+  treeDataCollapse: '折りたたみ',
 
   // Grouping columns
-  // groupingColumnHeaderName: 'Group',
-  // groupColumn: name => `Group by ${name}`,
-  // unGroupColumn: name => `Stop grouping by ${name}`,
+  groupingColumnHeaderName: 'グループ',
+  groupColumn: (name) => `${name}でグループ化`,
+  unGroupColumn: (name) => `${name}のグループを解除`,
 
   // Master/detail
-  // expandDetailPanel: 'Expand',
-  // collapseDetailPanel: 'Collapse',
+  detailPanelToggle: '詳細パネルの切り替え',
+  expandDetailPanel: '展開',
+  collapseDetailPanel: '折りたたみ',
 
   // Row reordering text
-  // rowReorderingHeaderName: 'Row reordering',
+  rowReorderingHeaderName: '行並び替え',
+
+  // Aggregation
+  aggregationMenuItemHeader: '合計',
+  aggregationFunctionLabelSum: '和',
+  aggregationFunctionLabelAvg: '平均',
+  aggregationFunctionLabelMin: '最小値',
+  aggregationFunctionLabelMax: '最大値',
+  aggregationFunctionLabelSize: 'サイズ',
 };
 
 export const jaJP: Localization = getGridLocalization(jaJPGrid, jaJPCore);

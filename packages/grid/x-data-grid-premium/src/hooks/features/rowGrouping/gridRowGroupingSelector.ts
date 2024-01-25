@@ -1,15 +1,15 @@
 import { gridColumnLookupSelector } from '@mui/x-data-grid-pro';
-import { createSelector } from '@mui/x-data-grid-pro/internals';
+import { createSelector, createSelectorMemoized } from '@mui/x-data-grid/internals';
 import { GridStatePremium } from '../../../models/gridStatePremium';
 
-export const gridRowGroupingStateSelector = (state: GridStatePremium) => state.rowGrouping;
+const gridRowGroupingStateSelector = (state: GridStatePremium) => state.rowGrouping;
 
 export const gridRowGroupingModelSelector = createSelector(
   gridRowGroupingStateSelector,
   (rowGrouping) => rowGrouping.model,
 );
 
-export const gridRowGroupingSanitizedModelSelector = createSelector(
+export const gridRowGroupingSanitizedModelSelector = createSelectorMemoized(
   gridRowGroupingModelSelector,
   gridColumnLookupSelector,
   (model, columnsLookup) =>

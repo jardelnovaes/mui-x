@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "include": [
-    "../../node_modules/@mui/monorepo/docs/types/react-docgen.d.ts",
+    "../../node_modules/@mui/monorepo/packages/api-docs-builder/react-docgen.d.ts",
     "api/buildApi.ts",
     "i18n.js"
   ],
@@ -13,7 +13,8 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "types": ["node"]
+    "types": ["node"],
+    "noImplicitAny": false
   },
   "exclude": ["node_modules"]
 }

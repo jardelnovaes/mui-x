@@ -1,5 +1,4 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import {
   DataGridPro,
   useGridApiContext,
@@ -109,7 +108,7 @@ const DEMO_INITIAL_STATE = {
   activeViewId: null,
 };
 
-const ViewListItem = (props) => {
+function ViewListItem(props) {
   const { view, viewId, selected, onDelete, onSelect, ...other } = props;
 
   return (
@@ -128,54 +127,9 @@ const ViewListItem = (props) => {
       </IconButton>
     </MenuItem>
   );
-};
+}
 
-ViewListItem.propTypes = {
-  onDelete: PropTypes.func.isRequired,
-  onSelect: PropTypes.func.isRequired,
-  selected: PropTypes.bool.isRequired,
-  view: PropTypes.shape({
-    label: PropTypes.string.isRequired,
-    value: PropTypes.shape({
-      columns: PropTypes.shape({
-        columnVisibilityModel: PropTypes.object,
-        dimensions: PropTypes.object,
-        orderedFields: PropTypes.arrayOf(PropTypes.string),
-      }),
-      detailPanel: PropTypes.shape({
-        expandedRowIds: PropTypes.arrayOf(
-          PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-        ).isRequired,
-      }),
-      filter: PropTypes.shape({
-        filterModel: PropTypes.object,
-      }),
-      pagination: PropTypes.shape({
-        page: PropTypes.number,
-        pageSize: PropTypes.number,
-      }),
-      pinnedColumns: PropTypes.shape({
-        left: PropTypes.arrayOf(PropTypes.string),
-        right: PropTypes.arrayOf(PropTypes.string),
-      }),
-      preferencePanel: PropTypes.shape({
-        open: PropTypes.bool.isRequired,
-        /**
-         * Tab currently opened.
-         * @default GridPreferencePanelsValue.filter
-         * TODO v6: Remove the default behavior
-         */
-        openedPanelValue: PropTypes.oneOf(['columns', 'filters']),
-      }),
-      sorting: PropTypes.shape({
-        sortModel: PropTypes.arrayOf(PropTypes.object),
-      }),
-    }).isRequired,
-  }).isRequired,
-  viewId: PropTypes.string.isRequired,
-};
-
-const NewViewListButton = (props) => {
+function NewViewListButton(props) {
   const { label, onLabelChange, onSubmit, isValid } = props;
   const [isAddingView, setIsAddingView] = React.useState(false);
 
@@ -221,16 +175,9 @@ const NewViewListButton = (props) => {
       </Dialog>
     </React.Fragment>
   );
-};
+}
 
-NewViewListButton.propTypes = {
-  isValid: PropTypes.bool.isRequired,
-  label: PropTypes.string.isRequired,
-  onLabelChange: PropTypes.func.isRequired,
-  onSubmit: PropTypes.func.isRequired,
-};
-
-const CustomToolbar = () => {
+function CustomToolbar() {
   const apiRef = useGridApiContext();
   const [state, dispatch] = React.useReducer(demoReducer, DEMO_INITIAL_STATE);
 
@@ -241,8 +188,8 @@ const CustomToolbar = () => {
     });
   };
 
-  const handleNewViewLabelChange = (e) => {
-    dispatch({ type: 'setNewViewLabel', label: e.target.value });
+  const handleNewViewLabelChange = (event) => {
+    dispatch({ type: 'setNewViewLabel', label: event.target.value });
   };
 
   const handleDeleteView = React.useCallback((viewId) => {
@@ -307,6 +254,7 @@ const CustomToolbar = () => {
           role={undefined}
           transition
           placement="bottom-start"
+          sx={{ zIndex: 'modal' }}
         >
           {({ TransitionProps }) => (
             <Fade {...TransitionProps} timeout={350}>
@@ -341,7 +289,7 @@ const CustomToolbar = () => {
       />
     </GridToolbarContainer>
   );
-};
+}
 
 export default function RestoreStateApiRef() {
   const apiRef = useGridApiRef();
@@ -351,9 +299,9 @@ export default function RestoreStateApiRef() {
   });
 
   return (
-    <Box sx={{ width: '100%', height: 400, bgcolor: 'background.paper' }}>
+    <Box sx={{ width: '100%', height: 400 }}>
       <DataGridPro
-        components={{ Toolbar: CustomToolbar }}
+        slots={{ toolbar: CustomToolbar }}
         loading={loading}
         apiRef={apiRef}
         pagination

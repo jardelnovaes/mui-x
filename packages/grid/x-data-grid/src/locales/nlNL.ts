@@ -6,7 +6,6 @@ const nlNLGrid: Partial<GridLocaleText> = {
   // Root
   noRowsLabel: 'Geen resultaten.',
   noResultsOverlayLabel: 'Geen resultaten gevonden.',
-  errorOverlayDefaultLabel: 'Er deed zich een fout voor.',
 
   // Density selector toolbar button text
   toolbarDensity: 'Grootte',
@@ -28,16 +27,16 @@ const nlNLGrid: Partial<GridLocaleText> = {
     count > 1 ? `${count} actieve filters` : `${count} filter actief`,
 
   // Quick filter toolbar field
-  // toolbarQuickFilterPlaceholder: 'Search...',
-  // toolbarQuickFilterLabel: 'Search',
-  // toolbarQuickFilterDeleteIconLabel: 'Clear',
+  toolbarQuickFilterPlaceholder: 'Zoeken…',
+  toolbarQuickFilterLabel: 'Zoeken',
+  toolbarQuickFilterDeleteIconLabel: 'Wissen',
 
   // Export selector toolbar button text
   toolbarExport: 'Exporteren',
   toolbarExportLabel: 'Exporteren',
   toolbarExportCSV: 'Exporteer naar CSV',
   toolbarExportPrint: 'Print',
-  // toolbarExportExcel: 'Download as Excel',
+  toolbarExportExcel: 'Downloaden als Excel-bestand',
 
   // Columns panel text
   columnsPanelTextFieldLabel: 'Zoek kolom',
@@ -48,11 +47,10 @@ const nlNLGrid: Partial<GridLocaleText> = {
 
   // Filter panel text
   filterPanelAddFilter: 'Filter toevoegen',
+  filterPanelRemoveAll: 'Alles verwijderen',
   filterPanelDeleteIconLabel: 'Verwijderen',
-  // filterPanelLinkOperator: 'Logic operator',
-  filterPanelOperators: 'Operatoren',
-
-  // TODO v6: rename to filterPanelOperator
+  filterPanelLogicOperator: 'Logische operator',
+  filterPanelOperator: 'Operatoren',
   filterPanelOperatorAnd: 'En',
   filterPanelOperatorOr: 'Of',
   filterPanelColumns: 'Kolommen',
@@ -72,7 +70,34 @@ const nlNLGrid: Partial<GridLocaleText> = {
   filterOperatorOnOrBefore: 'is gelijk of er voor',
   filterOperatorIsEmpty: 'is leeg',
   filterOperatorIsNotEmpty: 'is niet leeg',
-  // filterOperatorIsAnyOf: 'is any of',
+  filterOperatorIsAnyOf: 'is een van',
+  'filterOperator=': '=',
+  'filterOperator!=': '!=',
+  'filterOperator>': '>',
+  'filterOperator>=': '>=',
+  'filterOperator<': '<',
+  'filterOperator<=': '<=',
+
+  // Header filter operators text
+  headerFilterOperatorContains: 'Bevat',
+  headerFilterOperatorEquals: 'Gelijk aan',
+  headerFilterOperatorStartsWith: 'Begint met',
+  headerFilterOperatorEndsWith: 'Eindigt met',
+  headerFilterOperatorIs: 'Is',
+  headerFilterOperatorNot: 'Is niet',
+  headerFilterOperatorAfter: 'Is na',
+  headerFilterOperatorOnOrAfter: 'Is op of na',
+  headerFilterOperatorBefore: 'Is voor',
+  headerFilterOperatorOnOrBefore: 'Is op of voor',
+  headerFilterOperatorIsEmpty: 'Is leeg',
+  headerFilterOperatorIsNotEmpty: 'Is niet leeg',
+  headerFilterOperatorIsAnyOf: 'Is een van',
+  'headerFilterOperator=': 'Gelijk aan',
+  'headerFilterOperator!=': 'Niet gelijk aan',
+  'headerFilterOperator>': 'Is groter dan',
+  'headerFilterOperator>=': 'Is groter dan of gelijk aan',
+  'headerFilterOperator<': 'Is kleiner dan',
+  'headerFilterOperator<=': 'Is kleiner dan of gelijk aan',
 
   // Filter values text
   filterValueAny: 'alles',
@@ -82,6 +107,7 @@ const nlNLGrid: Partial<GridLocaleText> = {
   // Column menu text
   columnMenuLabel: 'Menu',
   columnMenuShowColumns: 'Toon kolommen',
+  columnMenuManageColumns: 'Kolommen beheren',
   columnMenuFilter: 'Filteren',
   columnMenuHideColumn: 'Verbergen',
   columnMenuUnsort: 'Annuleer sortering',
@@ -109,10 +135,10 @@ const nlNLGrid: Partial<GridLocaleText> = {
 
   // Checkbox selection text
   checkboxSelectionHeaderName: 'Checkbox selectie',
-  // checkboxSelectionSelectAllRows: 'Select all rows',
-  // checkboxSelectionUnselectAllRows: 'Unselect all rows',
-  // checkboxSelectionSelectRow: 'Select row',
-  // checkboxSelectionUnselectRow: 'Unselect row',
+  checkboxSelectionSelectAllRows: 'Alle rijen selecteren',
+  checkboxSelectionUnselectAllRows: 'Alle rijen de-selecteren',
+  checkboxSelectionSelectRow: 'Rij selecteren',
+  checkboxSelectionUnselectRow: 'Rij de-selecteren',
 
   // Boolean cell text
   booleanCellTrueLabel: 'waar',
@@ -137,11 +163,20 @@ const nlNLGrid: Partial<GridLocaleText> = {
   unGroupColumn: (name) => `Stop groeperen op ${name}`,
 
   // Master/detail
-  // expandDetailPanel: 'Expand',
-  // collapseDetailPanel: 'Collapse',
+  detailPanelToggle: 'Detailmenu in- of uitklappen',
+  expandDetailPanel: 'Uitklappen',
+  collapseDetailPanel: 'Inklappen',
 
   // Row reordering text
-  // rowReorderingHeaderName: 'Row reordering',
+  rowReorderingHeaderName: 'Rijen hersorteren',
+
+  // Aggregation
+  aggregationMenuItemHeader: 'Aggregatie',
+  aggregationFunctionLabelSum: 'som',
+  aggregationFunctionLabelAvg: 'gem',
+  aggregationFunctionLabelMin: 'min',
+  aggregationFunctionLabelMax: 'max',
+  aggregationFunctionLabelSize: 'grootte',
 };
 
 export const nlNL: Localization = getGridLocalization(nlNLGrid, nlNLCore);

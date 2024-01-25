@@ -1,5 +1,4 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import { useDemoData } from '@mui/x-data-grid-generator';
 import {
   DataGrid,
@@ -45,7 +44,7 @@ const exportBlob = (blob, filename) => {
   });
 };
 
-const JsonExportMenuItem = (props) => {
+function JsonExportMenuItem(props) {
   const apiRef = useGridApiContext();
 
   const { hideMenu } = props;
@@ -57,7 +56,6 @@ const JsonExportMenuItem = (props) => {
         const blob = new Blob([jsonString], {
           type: 'text/json',
         });
-
         exportBlob(blob, 'DataGrid_demo.json');
 
         // Hide the export menu after the export
@@ -67,26 +65,26 @@ const JsonExportMenuItem = (props) => {
       Export JSON
     </MenuItem>
   );
-};
-
-JsonExportMenuItem.propTypes = {
-  hideMenu: PropTypes.func,
-};
+}
 
 const csvOptions = { delimiter: ';' };
 
-const CustomExportButton = (props) => (
-  <GridToolbarExportContainer {...props}>
-    <GridCsvExportMenuItem options={csvOptions} />
-    <JsonExportMenuItem />
-  </GridToolbarExportContainer>
-);
+function CustomExportButton(props) {
+  return (
+    <GridToolbarExportContainer {...props}>
+      <GridCsvExportMenuItem options={csvOptions} />
+      <JsonExportMenuItem />
+    </GridToolbarExportContainer>
+  );
+}
 
-const CustomToolbar = (props) => (
-  <GridToolbarContainer {...props}>
-    <CustomExportButton />
-  </GridToolbarContainer>
-);
+function CustomToolbar(props) {
+  return (
+    <GridToolbarContainer {...props}>
+      <CustomExportButton />
+    </GridToolbarContainer>
+  );
+}
 
 export default function CustomExport() {
   const { data, loading } = useDemoData({
@@ -97,11 +95,7 @@ export default function CustomExport() {
 
   return (
     <div style={{ height: 300, width: '100%' }}>
-      <DataGrid
-        {...data}
-        loading={loading}
-        components={{ Toolbar: CustomToolbar }}
-      />
+      <DataGrid {...data} loading={loading} slots={{ toolbar: CustomToolbar }} />
     </div>
   );
 }

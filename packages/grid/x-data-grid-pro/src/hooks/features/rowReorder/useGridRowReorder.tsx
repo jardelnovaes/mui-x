@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { unstable_composeClasses as composeClasses } from '@mui/material';
+import { unstable_composeClasses as composeClasses } from '@mui/utils';
 import {
   useGridLogger,
   useGridApiEventHandler,
@@ -7,16 +7,34 @@ import {
   getDataGridUtilityClass,
   useGridSelector,
   gridSortModelSelector,
-  gridRowTreeDepthSelector,
+  gridRowMaximumTreeDepthSelector,
   useGridApiOptionHandler,
   GridRowId,
-  gridEditRowsStateSelector,
 } from '@mui/x-data-grid';
+import { gridEditRowsStateSelector } from '@mui/x-data-grid/internals';
 import { GridRowOrderChangeParams } from '../../../models/gridRowOrderChangeParams';
-import { GridApiPro } from '../../../models/gridApiPro';
+import { GridPrivateApiPro } from '../../../models/gridApiPro';
 import { DataGridProProcessedProps } from '../../../models/dataGridProProps';
+import { GRID_REORDER_COL_DEF } from './gridRowReorderColDef';
 
 type OwnerState = { classes: DataGridProProcessedProps['classes'] };
+
+enum Direction {
+  UP,
+  DOWN,
+}
+
+interface ReorderStateProps {
+  previousTargetId: GridRowId | null;
+  dragDirection: Direction | null;
+}
+
+let previousMousePosition: { x: number; y: number } | null = null;
+
+let previousReorderState: ReorderStateProps = {
+  previousTargetId: null,
+  dragDirection: null,
+};
 
 const useUtilityClasses = (ownerState: OwnerState) => {
   const { classes } = ownerState;
@@ -33,12 +51,12 @@ const useUtilityClasses = (ownerState: OwnerState) => {
  * @requires useGridRows (method)
  */
 export const useGridRowReorder = (
-  apiRef: React.MutableRefObject<GridApiPro>,
+  apiRef: React.MutableRefObject<GridPrivateApiPro>,
   props: Pick<DataGridProProcessedProps, 'rowReordering' | 'onRowOrderChange' | 'classes'>,
 ): void => {
   const logger = useGridLogger(apiRef, 'useGridRowReorder');
   const sortModel = useGridSelector(apiRef, gridSortModelSelector);
-  const treeDepth = useGridSelector(apiRef, gridRowTreeDepthSelector);
+  const treeDepth = useGridSelector(apiRef, gridRowMaximumTreeDepthSelector);
   const dragRowNode = React.useRef<HTMLElement | null>(null);
   const originRowIndex = React.useRef<number | null>(null);
   const removeDnDStylesTimeout = React.useRef<any>();
@@ -80,7 +98,8 @@ export const useGridRowReorder = (
         dragRowNode.current!.classList.remove(classes.rowDragging);
       });
 
-      originRowIndex.current = apiRef.current.getRowIndex(params.id);
+      originRowIndex.current = apiRef.current.getRowIndexRelativeToVisibleRows(params.id);
+      apiRef.current.setCellFocus(params.id, GRID_REORDER_COL_DEF.field);
     },
     [isRowReorderDisabled, classes.rowDragging, logger, apiRef],
   );
@@ -91,16 +110,44 @@ export const useGridRowReorder = (
         return;
       }
 
+      const rowNode = apiRef.current.getRowNode(params.id);
+
+      if (!rowNode || rowNode.type === 'footer' || rowNode.type === 'pinnedRow') {
+        return;
+      }
+
       logger.debug(`Dragging over row ${params.id}`);
       event.preventDefault();
       // Prevent drag events propagation.
       // For more information check here https://github.com/mui/mui-x/issues/2680.
       event.stopPropagation();
 
+      const mouseMovementDiff = previousMousePosition
+        ? previousMousePosition.y - event.clientY
+        : event.clientY;
+
       if (params.id !== dragRowId) {
-        const targetRowIndex = apiRef.current.getRowIndex(params.id);
-        apiRef.current.setRowIndex(dragRowId, targetRowIndex);
+        const targetRowIndex = apiRef.current.getRowIndexRelativeToVisibleRows(params.id);
+
+        const dragDirection = mouseMovementDiff > 0 ? Direction.DOWN : Direction.UP;
+        const currentReorderState: ReorderStateProps = {
+          dragDirection,
+          previousTargetId: params.id,
+        };
+        const isStateChanged =
+          currentReorderState.dragDirection !== previousReorderState.dragDirection ||
+          currentReorderState.previousTargetId !== previousReorderState.previousTargetId;
+
+        if (
+          previousReorderState.dragDirection === null ||
+          (Math.abs(mouseMovementDiff) >= 1 && isStateChanged)
+        ) {
+          apiRef.current.setRowIndex(dragRowId, targetRowIndex);
+          previousReorderState = currentReorderState;
+        }
       }
+
+      previousMousePosition = { x: event.clientX, y: event.clientY };
     },
     [apiRef, logger, dragRowId],
   );
@@ -121,6 +168,7 @@ export const useGridRowReorder = (
 
       clearTimeout(removeDnDStylesTimeout.current);
       dragRowNode.current = null;
+      previousReorderState.dragDirection = null;
 
       // Check if the row was dropped outside the grid.
       if (event.dataTransfer.dropEffect === 'none') {
@@ -130,8 +178,8 @@ export const useGridRowReorder = (
       } else {
         // Emit the rowOrderChange event only once when the reordering stops.
         const rowOrderChangeParams: GridRowOrderChangeParams = {
-          row: apiRef.current.getRow(dragRowId),
-          targetIndex: apiRef.current.getRowIndex(params.id),
+          row: apiRef.current.getRow(dragRowId)!,
+          targetIndex: apiRef.current.getRowIndexRelativeToVisibleRows(params.id),
           oldIndex: originRowIndex.current!,
         };
 

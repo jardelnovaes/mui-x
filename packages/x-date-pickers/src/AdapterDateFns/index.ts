@@ -1,1 +1,1 @@
-export { default as AdapterDateFns } from '@date-io/date-fns';
+export { AdapterDateFns } from './AdapterDateFns';

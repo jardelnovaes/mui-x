@@ -1,1 +1,1 @@
-export { default as AdapterDayjs } from '@date-io/dayjs';
+export { AdapterDayjs } from './AdapterDayjs';

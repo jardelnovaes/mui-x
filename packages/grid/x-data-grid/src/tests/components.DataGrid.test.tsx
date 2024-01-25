@@ -1,9 +1,8 @@
 import * as React from 'react';
-// @ts-ignore Remove once the test utils are typed
-import { createRenderer, ErrorBoundary, fireEvent, screen } from '@mui/monorepo/test/utils';
+import { createRenderer, ErrorBoundary, fireEvent, screen } from '@mui-internal/test-utils';
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { DataGrid, GridOverlay } from '@mui/x-data-grid';
+import { DataGrid, GridOverlay, DataGridProps } from '@mui/x-data-grid';
 import { getCell, getRow } from 'test/utils/helperFn';
 
 describe('<DataGrid /> - Components', () => {
@@ -11,18 +10,9 @@ describe('<DataGrid /> - Components', () => {
 
   const baselineProps = {
     rows: [
-      {
-        id: 0,
-        brand: 'Nike',
-      },
-      {
-        id: 1,
-        brand: 'Adidas',
-      },
-      {
-        id: 2,
-        brand: 'Puma',
-      },
+      { id: 0, brand: 'Nike' },
+      { id: 1, brand: 'Adidas' },
+      { id: 2, brand: 'Puma' },
     ],
     columns: [{ field: 'brand' }],
   };
@@ -38,7 +28,9 @@ describe('<DataGrid /> - Components', () => {
     });
 
     it('should hide custom footer if prop hideFooter is set', () => {
-      const CustomFooter = () => <div className="customFooter">Custom Footer</div>;
+      function CustomFooter() {
+        return <div className="customFooter">Custom Footer</div>;
+      }
       render(
         <div style={{ width: 300, height: 500 }}>
           <DataGrid {...baselineProps} hideFooter components={{ Footer: CustomFooter }} />
@@ -63,6 +55,26 @@ describe('<DataGrid /> - Components', () => {
       expect(getCell(0, 0)).to.have.attr('data-name', 'foobar');
     });
 
+    it('should not override cell dimensions when passing `slotProps.cell.style` to the cell', () => {
+      function Test(props: Partial<DataGridProps>) {
+        return (
+          <div style={{ width: 300, height: 500 }}>
+            <DataGrid {...baselineProps} {...props} />
+          </div>
+        );
+      }
+
+      const { setProps } = render(<Test slotProps={{ cell: {} }} />);
+
+      const initialCellWidth = getCell(0, 0).getBoundingClientRect().width;
+
+      setProps({ slotProps: { cell: { style: { backgroundColor: 'red' } } } });
+
+      const cell = getCell(0, 0);
+      expect(cell).toHaveInlineStyle({ backgroundColor: 'red' });
+      expect(cell.getBoundingClientRect().width).to.equal(initialCellWidth);
+    });
+
     it('should pass the props from componentsProps.row to the row', () => {
       render(
         <div style={{ width: 300, height: 500 }}>
@@ -85,7 +97,7 @@ describe('<DataGrid /> - Components', () => {
             {...baselineProps}
             hideFooter
             filterModel={{
-              items: [{ columnField: 'brand', operatorValue: 'contains', value: 'a' }],
+              items: [{ field: 'brand', operator: 'contains', value: 'a' }],
             }}
             disableVirtualization
             componentsProps={{ columnHeaderFilterIconButton: { onClick } }}
@@ -93,7 +105,7 @@ describe('<DataGrid /> - Components', () => {
         </div>,
       );
       expect(onClick.callCount).to.equal(0);
-      const button = screen.queryByRole('button', { name: /show filters/i });
+      const button = screen.getByRole('button', { name: /show filters/i });
       fireEvent.click(button);
       expect(onClick.lastCall.args[0]).to.have.property('field', 'brand');
       expect(onClick.lastCall.args[1]).to.have.property('target', button);
@@ -149,7 +161,8 @@ describe('<DataGrid /> - Components', () => {
         </ErrorBoundary>,
       );
     }).toErrorDev([
-      'MUI: useGridRootProps should only be used inside the DataGrid/DataGridPro component.',
+      'MUI: useGridRootProps should only be used inside the DataGrid, DataGridPro or DataGridPremium component.',
+      'MUI: useGridRootProps should only be used inside the DataGrid, DataGridPro or DataGridPremium component.',
       'The above error occurred in the <ForwardRef(GridOverlay)> component',
     ]);
   });

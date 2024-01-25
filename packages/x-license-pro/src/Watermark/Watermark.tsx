@@ -1,15 +1,20 @@
 import * as React from 'react';
-import { useLicenseVerifier, MuiCommercialPackageName } from '../useLicenseVerifier';
-import { LicenseStatus } from '../utils/licenseStatus';
+import { MuiCommercialPackageName, useLicenseVerifier } from '../useLicenseVerifier';
+import { LICENSE_STATUS, LicenseStatus } from '../utils/licenseStatus';
 
 function getLicenseErrorMessage(licenseStatus: LicenseStatus) {
   switch (licenseStatus) {
-    case LicenseStatus.Expired:
-      return 'MUI X: License key expired';
-    case LicenseStatus.Invalid:
-      return 'MUI X: Invalid license key';
-    case LicenseStatus.NotFound:
-      return 'MUI X: Missing license key';
+    case LICENSE_STATUS.ExpiredAnnualGrace:
+    case LICENSE_STATUS.ExpiredAnnual:
+      return 'MUI X Expired license key';
+    case LICENSE_STATUS.ExpiredVersion:
+      return 'MUI X Expired package version';
+    case LICENSE_STATUS.Invalid:
+      return 'MUI X Invalid license key';
+    case LICENSE_STATUS.OutOfScope:
+      return 'MUI X License key plan mismatch';
+    case LICENSE_STATUS.NotFound:
+      return 'MUI X Missing license key';
     default:
       throw new Error('MUI: Unhandled MUI X license status.');
   }
@@ -24,7 +29,7 @@ export function Watermark(props: WatermarkProps) {
   const { packageName, releaseInfo } = props;
   const licenseStatus = useLicenseVerifier(packageName, releaseInfo);
 
-  if (licenseStatus === LicenseStatus.Valid) {
+  if (licenseStatus.status === LICENSE_STATUS.Valid) {
     return null;
   }
 
@@ -43,7 +48,7 @@ export function Watermark(props: WatermarkProps) {
         fontSize: 24,
       }}
     >
-      {getLicenseErrorMessage(licenseStatus)}
+      {getLicenseErrorMessage(licenseStatus.status)}
     </div>
   );
 }

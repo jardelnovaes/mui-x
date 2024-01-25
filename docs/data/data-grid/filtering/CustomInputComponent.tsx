@@ -36,7 +36,6 @@ function RatingInputValue(props: GridFilterInputValueProps) {
     >
       <Rating
         name="custom-rating-filter-operator"
-        placeholder="Filter value"
         value={Number(item.value)}
         onChange={handleFilterChange}
         precision={0.5}
@@ -84,10 +83,9 @@ export default function CustomInputComponent() {
         initialState={{
           ...data.initialState,
           filter: {
+            ...data.initialState?.filter,
             filterModel: {
-              items: [
-                { id: 1, columnField: 'rating', value: '3.5', operatorValue: '>=' },
-              ],
+              items: [{ id: 1, field: 'rating', value: '3.5', operator: '>=' }],
             },
           },
         }}

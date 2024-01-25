@@ -1,7 +1,9 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
-import Box from '@mui/material/Box';
-import { DataGridPro, GridToolbar } from '@mui/x-data-grid-pro';
+import {
+  DataGridPro,
+  GRID_CHECKBOX_SELECTION_FIELD,
+  GridToolbar,
+} from '@mui/x-data-grid-pro';
 import { useDemoData } from '@mui/x-data-grid-generator';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import { styled } from '@mui/material/styles';
@@ -130,7 +132,7 @@ const AntDesignStyledDataGridPro = styled(DataGridPro)(({ theme }) => ({
   },
 }));
 
-const StyledBox = styled(Box)(({ theme }) => ({
+const StyledBox = styled('div')(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   height: 600,
@@ -162,7 +164,7 @@ function SettingsPanel(props) {
   }, []);
 
   const handlePaginationChange = React.useCallback((event) => {
-    setSelectedPaginationValue(event.target.value);
+    setSelectedPaginationValue(Number(event.target.value));
   }, []);
 
   const handleThemeChange = React.useCallback((event) => {
@@ -213,24 +215,12 @@ function SettingsPanel(props) {
           <MenuItem value="ant">Ant Design</MenuItem>
         </Select>
       </FormControl>
-      <Button
-        size="small"
-        variant="outlined"
-        color="primary"
-        onClick={handleApplyChanges}
-      >
+      <Button size="small" variant="outlined" onClick={handleApplyChanges}>
         <KeyboardArrowRightIcon fontSize="small" /> Apply
       </Button>
     </FormGroup>
   );
 }
-
-SettingsPanel.propTypes = {
-  onApply: PropTypes.func.isRequired,
-  size: PropTypes.number.isRequired,
-  theme: PropTypes.oneOf(['ant', 'default']).isRequired,
-  type: PropTypes.oneOf(['Commodity', 'Employee']).isRequired,
-};
 
 export default function FullFeaturedDemo() {
   const [isAntDesign, setIsAntDesign] = React.useState(false);
@@ -302,19 +292,19 @@ export default function FullFeaturedDemo() {
       />
       <DataGridComponent
         {...data}
-        components={{
-          Toolbar: GridToolbar,
+        slots={{
+          toolbar: GridToolbar,
         }}
-        componentsProps={{
+        slotProps={{
           toolbar: { showQuickFilter: true },
         }}
         loading={loading}
         checkboxSelection
-        disableSelectionOnClick
+        disableRowSelectionOnClick
         rowThreshold={0}
         initialState={{
           ...data.initialState,
-          pinnedColumns: { left: ['__check__', 'desk'] },
+          pinnedColumns: { left: [GRID_CHECKBOX_SELECTION_FIELD, 'desk'] },
         }}
         {...pagination}
       />

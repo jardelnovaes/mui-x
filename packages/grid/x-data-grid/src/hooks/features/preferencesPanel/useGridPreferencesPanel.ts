@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { GridApiCommunity } from '../../../models/api/gridApiCommunity';
+import { GridPrivateApiCommunity } from '../../../models/api/gridApiCommunity';
 import { useGridApiMethod } from '../../utils/useGridApiMethod';
 import { useGridLogger } from '../../utils/useGridLogger';
 import { DataGridProcessedProps } from '../../../models/props/DataGridProps';
@@ -18,7 +18,10 @@ export const preferencePanelStateInitializer: GridStateInitializer<
 /**
  * TODO: Add a single `setPreferencePanel` method to avoid multiple `setState`
  */
-export const useGridPreferencesPanel = (apiRef: React.MutableRefObject<GridApiCommunity>): void => {
+export const useGridPreferencesPanel = (
+  apiRef: React.MutableRefObject<GridPrivateApiCommunity>,
+  props: Pick<DataGridProcessedProps, 'initialState'>,
+): void => {
   const logger = useGridLogger(apiRef, 'useGridPreferencesPanel');
 
   const hideTimeout = React.useRef<any>();
@@ -54,12 +57,18 @@ export const useGridPreferencesPanel = (apiRef: React.MutableRefObject<GridApiCo
   }, [hidePreferences]);
 
   const showPreferences = React.useCallback<GridPreferencesPanelApi['showPreferences']>(
-    (newValue) => {
+    (newValue, panelId, labelId) => {
       logger.debug('Opening Preferences Panel');
       doNotHidePanel();
       apiRef.current.setState((state) => ({
         ...state,
-        preferencePanel: { ...state.preferencePanel, open: true, openedPanelValue: newValue },
+        preferencePanel: {
+          ...state.preferencePanel,
+          open: true,
+          openedPanelValue: newValue,
+          panelId,
+          labelId,
+        },
       }));
       apiRef.current.publishEvent('preferencePanelOpen', {
         openedPanelValue: newValue,
@@ -75,16 +84,25 @@ export const useGridPreferencesPanel = (apiRef: React.MutableRefObject<GridApiCo
       showPreferences,
       hidePreferences: hidePreferencesDelayed,
     },
-    'ColumnMenuApi',
+    'public',
   );
 
   /**
    * PRE-PROCESSING
    */
   const stateExportPreProcessing = React.useCallback<GridPipeProcessor<'exportState'>>(
-    (prevState) => {
+    (prevState, context) => {
       const preferencePanelToExport = gridPreferencePanelStateSelector(apiRef.current.state);
-      if (!preferencePanelToExport.open && !preferencePanelToExport.openedPanelValue) {
+
+      const shouldExportPreferencePanel =
+        // Always export if the `exportOnlyDirtyModels` property is not activated
+        !context.exportOnlyDirtyModels ||
+        // Always export if the panel was initialized
+        props.initialState?.preferencePanel != null ||
+        // Always export if the panel is opened
+        preferencePanelToExport.open;
+
+      if (!shouldExportPreferencePanel) {
         return prevState;
       }
 
@@ -93,7 +111,7 @@ export const useGridPreferencesPanel = (apiRef: React.MutableRefObject<GridApiCo
         preferencePanel: preferencePanelToExport,
       };
     },
-    [apiRef],
+    [apiRef, props.initialState?.preferencePanel],
   );
 
   const stateRestorePreProcessing = React.useCallback<GridPipeProcessor<'restoreState'>>(

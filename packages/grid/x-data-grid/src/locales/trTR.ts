@@ -6,7 +6,6 @@ const trTRGrid: Partial<GridLocaleText> = {
   // Root
   noRowsLabel: 'Satır yok',
   noResultsOverlayLabel: 'Sonuç bulunamadı.',
-  errorOverlayDefaultLabel: 'Bir hata oluştu.',
 
   // Density selector toolbar button text
   toolbarDensity: 'Yoğunluk',
@@ -27,7 +26,7 @@ const trTRGrid: Partial<GridLocaleText> = {
   toolbarFiltersTooltipActive: (count) => `${count} aktif filtre`,
 
   // Quick filter toolbar field
-  toolbarQuickFilterPlaceholder: 'Ara...',
+  toolbarQuickFilterPlaceholder: 'Ara…',
   toolbarQuickFilterLabel: 'Ara',
   toolbarQuickFilterDeleteIconLabel: 'Temizle',
 
@@ -47,11 +46,10 @@ const trTRGrid: Partial<GridLocaleText> = {
 
   // Filter panel text
   filterPanelAddFilter: 'Filtre Ekle',
+  filterPanelRemoveAll: 'Hepsini kaldır',
   filterPanelDeleteIconLabel: 'Kaldır',
-  // filterPanelLinkOperator: 'Logic operator',
-  filterPanelOperators: 'Operatör',
-
-  // TODO v6: rename to filterPanelOperator
+  filterPanelLogicOperator: 'Mantıksal operatörler',
+  filterPanelOperator: 'Operatör',
   filterPanelOperatorAnd: 'Ve',
   filterPanelOperatorOr: 'Veya',
   filterPanelColumns: 'Sütunlar',
@@ -72,6 +70,33 @@ const trTRGrid: Partial<GridLocaleText> = {
   filterOperatorIsEmpty: 'boş',
   filterOperatorIsNotEmpty: 'dolu',
   filterOperatorIsAnyOf: 'herhangi biri',
+  'filterOperator=': '=',
+  'filterOperator!=': '!=',
+  'filterOperator>': '>',
+  'filterOperator>=': '>=',
+  'filterOperator<': '<',
+  'filterOperator<=': '<=',
+
+  // Header filter operators text
+  headerFilterOperatorContains: 'Şunu içerir',
+  headerFilterOperatorEquals: 'Şuna eşittir',
+  headerFilterOperatorStartsWith: 'Şununla başlar',
+  headerFilterOperatorEndsWith: 'Şununla biter',
+  // headerFilterOperatorIs: 'Is',
+  // headerFilterOperatorNot: 'Is not',
+  // headerFilterOperatorAfter: 'Is after',
+  // headerFilterOperatorOnOrAfter: 'Is on or after',
+  // headerFilterOperatorBefore: 'Is before',
+  // headerFilterOperatorOnOrBefore: 'Is on or before',
+  // headerFilterOperatorIsEmpty: 'Is empty',
+  // headerFilterOperatorIsNotEmpty: 'Is not empty',
+  // headerFilterOperatorIsAnyOf: 'Is any of',
+  // 'headerFilterOperator=': 'Equals',
+  // 'headerFilterOperator!=': 'Not equals',
+  // 'headerFilterOperator>': 'Greater than',
+  // 'headerFilterOperator>=': 'Greater than or equal to',
+  // 'headerFilterOperator<': 'Less than',
+  // 'headerFilterOperator<=': 'Less than or equal to',
 
   // Filter values text
   filterValueAny: 'herhangi',
@@ -81,9 +106,10 @@ const trTRGrid: Partial<GridLocaleText> = {
   // Column menu text
   columnMenuLabel: 'Menü',
   columnMenuShowColumns: 'Sütunları göster',
-  columnMenuFilter: 'Filtre uygula',
+  columnMenuManageColumns: 'Sütunları yönet',
+  columnMenuFilter: 'Filtre Ekle',
   columnMenuHideColumn: 'Gizle',
-  columnMenuUnsort: 'Sıralama',
+  columnMenuUnsort: 'Varsayılan Sıralama',
   columnMenuSortAsc: 'Sırala - Artan',
   columnMenuSortDesc: 'Sırala - Azalan',
 
@@ -104,14 +130,14 @@ const trTRGrid: Partial<GridLocaleText> = {
 
   // Checkbox selection text
   checkboxSelectionHeaderName: 'Seçim',
-  // checkboxSelectionSelectAllRows: 'Select all rows',
-  // checkboxSelectionUnselectAllRows: 'Unselect all rows',
-  // checkboxSelectionSelectRow: 'Select row',
-  // checkboxSelectionUnselectRow: 'Unselect row',
+  checkboxSelectionSelectAllRows: 'Tüm satırları seç',
+  checkboxSelectionUnselectAllRows: 'Tüm satırların seçimini kaldır',
+  checkboxSelectionSelectRow: 'Satırı seç',
+  checkboxSelectionUnselectRow: 'Satır seçimini bırak',
 
   // Boolean cell text
-  // booleanCellTrueLabel: 'yes',
-  // booleanCellFalseLabel: 'no',
+  booleanCellTrueLabel: 'Evet',
+  booleanCellFalseLabel: 'Hayır',
 
   // Actions cell more text
   actionsCellMore: 'daha fazla',
@@ -132,11 +158,20 @@ const trTRGrid: Partial<GridLocaleText> = {
   unGroupColumn: (name) => `${name} için gruplamayı kaldır`,
 
   // Master/detail
+  detailPanelToggle: 'Detay görünümüne geçiş',
   expandDetailPanel: 'Genişlet',
   collapseDetailPanel: 'Gizle',
 
   // Row reordering text
-  // rowReorderingHeaderName: 'Row reordering',
+  rowReorderingHeaderName: 'Satırı yeniden sırala',
+
+  // Aggregation
+  aggregationMenuItemHeader: 'Toplama',
+  aggregationFunctionLabelSum: 'top',
+  aggregationFunctionLabelAvg: 'ort',
+  aggregationFunctionLabelMin: 'min',
+  aggregationFunctionLabelMax: 'maks',
+  aggregationFunctionLabelSize: 'boyut',
 };
 
 export const trTR: Localization = getGridLocalization(trTRGrid, trTRCore);

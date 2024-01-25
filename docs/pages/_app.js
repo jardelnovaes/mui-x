@@ -1,37 +1,32 @@
-/* eslint-disable import/first */
-import { LicenseInfo } from '@mui/x-data-grid-pro';
-
-// Remove the license warning from demonstration purposes
-LicenseInfo.setLicenseKey(process.env.NEXT_PUBLIC_MUI_LICENSE);
-
 import 'docs/src/modules/components/bootstrap';
 // --- Post bootstrap -----
 import pages from 'docsx/data/pages'; // DO NOT REMOVE
+import { postProcessImport } from 'docsx/src/modules/utils/postProcessImport';
 import * as React from 'react';
 import { loadCSS } from 'fg-loadcss/src/loadCSS';
 import NextHead from 'next/head';
 import PropTypes from 'prop-types';
-import acceptLanguage from 'accept-language';
 import { useRouter } from 'next/router';
 import { ponyfillGlobal } from '@mui/utils';
 import PageContext from 'docs/src/modules/components/PageContext';
 import GoogleAnalytics from 'docs/src/modules/components/GoogleAnalytics';
 import { ThemeProvider } from 'docs/src/modules/components/ThemeContext';
-import { pathnameToLanguage, getCookie } from 'docs/src/modules/utils/helpers';
-import { LANGUAGES } from 'docs/src/modules/constants';
 import { CodeVariantProvider } from 'docs/src/modules/utils/codeVariant';
 import { CodeCopyProvider } from 'docs/src/modules/utils/CodeCopy';
-import {
-  UserLanguageProvider,
-  useSetUserLanguage,
-  useUserLanguage,
-} from 'docs/src/modules/utils/i18n';
+import { UserLanguageProvider } from 'docs/src/modules/utils/i18n';
 import DocsStyledEngineProvider from 'docs/src/modules/utils/StyledEngineProvider';
+import { pathnameToLanguage } from 'docs/src/modules/utils/helpers';
 import createEmotionCache from 'docs/src/createEmotionCache';
 import findActivePage from 'docs/src/modules/utils/findActivePage';
+import { LicenseInfo } from '@mui/x-license-pro';
+import getProductInfoFromUrl from 'docs/src/modules/utils/getProductInfoFromUrl';
+
+// Remove the license warning from demonstration purposes
+LicenseInfo.setLicenseKey(process.env.NEXT_PUBLIC_MUI_LICENSE);
 
 function getMuiPackageVersion(packageName, commitRef) {
   if (commitRef === undefined) {
+    // #default-branch-switch with latest for the master branch
     return 'latest';
   }
   const shortSha = commitRef.slice(0, 8);
@@ -42,41 +37,11 @@ ponyfillGlobal.muiDocConfig = {
   csbIncludePeerDependencies: (deps, { versions }) => {
     const newDeps = { ...deps };
 
-    if (newDeps['@mui/x-data-grid']) {
-      newDeps['@mui/material'] = versions['@mui/material'];
-    }
-
-    if (newDeps['@mui/x-data-grid-pro']) {
-      newDeps['@mui/material'] = versions['@mui/material'];
-      newDeps['@mui/x-data-grid'] = versions['@mui/x-data-grid'];
-    }
-
-    if (newDeps['@mui/x-data-grid-premium']) {
-      newDeps['@mui/material'] = versions['@mui/material'];
-      newDeps['@mui/x-data-grid'] = versions['@mui/x-data-grid'];
-      newDeps['@mui/x-data-grid-pro'] = versions['@mui/x-data-grid-pro'];
-      // TODO: remove when https://github.com/mui/material-ui/pull/32492 is released
-      // use `import 'exceljs'` in demonstrations instead
-      newDeps.exceljs = versions.exceljs;
-    }
+    newDeps['@mui/material'] = versions['@mui/material'];
 
     if (newDeps['@mui/x-data-grid-generator']) {
-      newDeps['@mui/material'] = versions['@mui/material'];
       newDeps['@mui/icons-material'] = versions['@mui/icons-material'];
-      newDeps['@mui/x-data-grid'] = versions['@mui/x-data-grid']; // TS types are imported from @mui/x-data-grid
-      newDeps['@mui/x-data-grid-pro'] = versions['@mui/x-data-grid-pro']; // Some TS types are imported from @mui/x-data-grid-pro
     }
-
-    if (newDeps['@mui/x-date-pickers']) {
-      newDeps['@mui/material'] = versions['@mui/material'];
-      newDeps['date-fns'] = versions['date-fns'];
-    }
-
-    if (newDeps['@mui/x-date-pickers-pro']) {
-      newDeps['@mui/material'] = versions['@mui/material'];
-      newDeps['@mui/x-date-pickers'] = versions['@mui/x-date-pickers'];
-    }
-
     return newDeps;
   },
   csbGetVersions: (versions, { muiCommitRef }) => {
@@ -88,45 +53,17 @@ ponyfillGlobal.muiDocConfig = {
       '@mui/x-data-grid-generator': getMuiPackageVersion('x-data-grid-generator', muiCommitRef),
       '@mui/x-date-pickers': getMuiPackageVersion('x-date-pickers', muiCommitRef),
       '@mui/x-date-pickers-pro': getMuiPackageVersion('x-date-pickers-pro', muiCommitRef),
-      'date-fns': 'latest',
+      '@mui/x-charts': getMuiPackageVersion('x-charts', muiCommitRef),
+      '@mui/x-tree-view': getMuiPackageVersion('x-tree-view', muiCommitRef),
       exceljs: 'latest',
     };
     return output;
   },
+  postProcessImport,
 };
 
 // Client-side cache, shared for the whole session of the user in the browser.
 const clientSideEmotionCache = createEmotionCache();
-
-// Set the locales that the documentation automatically redirects to.
-acceptLanguage.languages(LANGUAGES);
-
-function LanguageNegotiation() {
-  const setUserLanguage = useSetUserLanguage();
-  const router = useRouter();
-  const userLanguage = useUserLanguage();
-
-  React.useEffect(() => {
-    const { userLanguage: userLanguageUrl, canonicalAs } = pathnameToLanguage(router.asPath);
-    const preferedLanguage =
-      LANGUAGES.find((lang) => lang === getCookie('userLanguage')) ||
-      acceptLanguage.get(navigator.language) ||
-      userLanguage;
-
-    if (
-      userLanguageUrl === 'en' &&
-      userLanguage !== preferedLanguage &&
-      !process.env.PULL_REQUEST
-    ) {
-      window.location =
-        preferedLanguage === 'en' ? canonicalAs : `/${preferedLanguage}${canonicalAs}`;
-    } else if (userLanguage !== userLanguageUrl) {
-      setUserLanguage(userLanguageUrl);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return null;
-}
 
 let reloadInterval;
 
@@ -189,7 +126,7 @@ async function registerServiceWorker() {
     window.location.host.indexOf('mui.com') !== -1
   ) {
     // register() automatically attempts to refresh the sw.js.
-    const registration = await navigator.serviceWorker.register('/sw.js');
+    const registration = await navigator.serviceWorker.register('/x/sw.js');
     // Force the page reload for users.
     forcePageReload(registration);
   }
@@ -232,6 +169,18 @@ function AppWrapper(props) {
   const { children, emotionCache, pageProps } = props;
 
   const router = useRouter();
+  const { productId: productIdRaw, productCategoryId } = getProductInfoFromUrl(router.asPath);
+  const { canonicalAs } = pathnameToLanguage(router.asPath);
+  let productId = productIdRaw;
+
+  // Not respecting URL convention, ad-hoc workaround
+  if (canonicalAs.startsWith('/x/api/data-grid/')) {
+    productId = 'x-data-grid';
+  } else if (canonicalAs.startsWith('/x/api/date-pickers/')) {
+    productId = 'x-date-pickers';
+  } else if (canonicalAs.startsWith('/x/api/charts/')) {
+    productId = 'x-charts';
+  }
 
   React.useEffect(() => {
     loadDependencies();
@@ -244,14 +193,97 @@ function AppWrapper(props) {
     }
   }, []);
 
-  const activePage = findActivePage(pages, router.pathname);
-
   let fonts = [];
-  if (router.pathname.match(/onepirate/)) {
+  if (pathnameToLanguage(router.asPath).canonicalAs.match(/onepirate/)) {
     fonts = [
       'https://fonts.googleapis.com/css?family=Roboto+Condensed:700|Work+Sans:300,400&display=swap',
     ];
   }
+
+  const pageContextValue = React.useMemo(() => {
+    const { activePage, activePageParents } = findActivePage(pages, router.pathname);
+    const languagePrefix = pageProps.userLanguage === 'en' ? '' : `/${pageProps.userLanguage}`;
+
+    let productIdentifier = {
+      metadata: '',
+      name: 'MUI X',
+      versions: [
+        { text: 'v7 (next)', href: `https://next.mui.com${languagePrefix}/x/introduction/` },
+        { text: `v${process.env.LIB_VERSION}`, current: true },
+        { text: 'v5', href: `https://v5.mui.com${languagePrefix}/x/introduction/` },
+        { text: 'v4', href: `https://v4.mui.com${languagePrefix}/components/data-grid/` },
+      ],
+    };
+
+    if (productId === 'x-data-grid') {
+      productIdentifier = {
+        metadata: 'MUI X',
+        name: 'Data Grid',
+        versions: [
+          {
+            text: 'v7 (next)',
+            href: `https://next.mui.com${languagePrefix}/x/react-data-grid/`,
+          },
+          { text: `v${process.env.DATA_GRID_VERSION}`, current: true },
+          { text: 'v5', href: `https://v5.mui.com${languagePrefix}/x/react-data-grid/` },
+          { text: 'v4', href: `https://v4.mui.com${languagePrefix}/components/data-grid/` },
+        ],
+      };
+    } else if (productId === 'x-date-pickers') {
+      productIdentifier = {
+        metadata: 'MUI X',
+        name: 'Date Pickers',
+        versions: [
+          {
+            text: 'v7 (next)',
+            href: `https://next.mui.com${languagePrefix}/x/react-date-pickers/`,
+          },
+          { text: `v${process.env.DATE_PICKERS_VERSION}`, current: true },
+          {
+            text: 'v5',
+            href: `https://v5.mui.com${languagePrefix}/x/react-date-pickers/getting-started/`,
+          },
+        ],
+      };
+    } else if (productId === 'x-charts') {
+      productIdentifier = {
+        metadata: 'MUI X',
+        name: 'Charts',
+        versions: [
+          {
+            text: 'v7 (next)',
+            href: `https://next.mui.com${languagePrefix}/x/react-charts/`,
+          },
+          { text: `v${process.env.CHARTS_VERSION}`, current: true },
+        ],
+      };
+    } else if (productId === 'x-tree-view') {
+      productIdentifier = {
+        metadata: 'MUI X',
+        name: 'Tree View',
+        versions: [
+          {
+            text: 'v7 (next)',
+            href: `https://next.mui.com${languagePrefix}/x/react-tree-view/getting-started`,
+          },
+          { text: `v${process.env.TREE_VIEW_VERSION}`, current: true },
+        ],
+      };
+    }
+
+    return {
+      activePage,
+      activePageParents,
+      pages,
+      productIdentifier,
+      productId,
+      productCategoryId,
+    };
+  }, [productId, productCategoryId, pageProps.userLanguage, router.pathname]);
+
+  // Replicate change reverted in https://github.com/mui/material-ui/pull/35969/files#r1089572951
+  // Fixes playground styles in dark mode.
+  const ThemeWrapper = router.pathname.startsWith('/playground') ? React.Fragment : ThemeProvider;
 
   return (
     <React.Fragment>
@@ -259,19 +291,20 @@ function AppWrapper(props) {
         {fonts.map((font) => (
           <link rel="stylesheet" href={font} key={font} />
         ))}
+        <meta name="mui:productId" content={productId} />
+        <meta name="mui:productCategoryId" content={productCategoryId} />
       </NextHead>
       <UserLanguageProvider defaultUserLanguage={pageProps.userLanguage}>
         <CodeCopyProvider>
           <CodeVariantProvider>
-            <PageContext.Provider value={{ activePage, pages }}>
-              <ThemeProvider>
+            <PageContext.Provider value={pageContextValue}>
+              <ThemeWrapper>
                 <DocsStyledEngineProvider cacheLtr={emotionCache}>
                   {children}
                   <GoogleAnalytics />
                 </DocsStyledEngineProvider>
-              </ThemeProvider>
+              </ThemeWrapper>
             </PageContext.Provider>
-            <LanguageNegotiation />
           </CodeVariantProvider>
         </CodeCopyProvider>
       </UserLanguageProvider>
@@ -319,16 +352,16 @@ MyApp.getInitialProps = async ({ ctx, Component }) => {
 // Track fraction of actual events to prevent exceeding event quota.
 // Filter sessions instead of individual events so that we can track multiple metrics per device.
 const disableWebVitalsReporting = Math.random() > 0.0001;
-export function reportWebVitals({ id, name, label, value }) {
+export function reportWebVitals({ id, name, label, delta, value }) {
   if (disableWebVitalsReporting) {
     return;
   }
 
-  window.ga('send', 'event', {
-    eventCategory: label === 'web-vital' ? 'Web Vitals' : 'Next.js custom metric',
-    eventAction: name,
-    eventValue: Math.round(name === 'CLS' ? value * 1000 : value), // values must be integers
-    eventLabel: id, // id unique to current page load
-    nonInteraction: true, // avoids affecting bounce rate.
+  window.gtag('event', name, {
+    value: delta,
+    metric_label: label === 'web-vital' ? 'Web Vitals' : 'Next.js custom metric',
+    metric_value: value,
+    metric_delta: delta,
+    metric_id: id, // id unique to current page load
   });
 }

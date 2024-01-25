@@ -1,17 +1,16 @@
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
-import Box from '@mui/material/Box';
 import Tooltip, { tooltipClasses, TooltipProps } from '@mui/material/Tooltip';
 import {
-  GridColumns,
+  GridColDef,
   GridRowsProp,
-  DataGridPro,
+  DataGrid,
   GridPreProcessEditCellProps,
   GridEditInputCell,
   GridRenderEditCellParams,
-} from '@mui/x-data-grid-pro';
+} from '@mui/x-data-grid';
 
-const StyledBox = styled(Box)(({ theme }) => ({
+const StyledBox = styled('div')(({ theme }) => ({
   height: 400,
   width: '100%',
   '& .MuiDataGrid-cell--editable': {
@@ -67,7 +66,7 @@ export default function ValidateServerNameGrid() {
     return { ...params.props, error: errorMessage };
   };
 
-  const columns: GridColumns = [
+  const columns: GridColDef[] = [
     {
       field: 'name',
       headerName: 'MUI Contributor',
@@ -86,11 +85,10 @@ export default function ValidateServerNameGrid() {
 
   return (
     <StyledBox>
-      <DataGridPro
+      <DataGrid
         rows={rows}
         columns={columns}
         isCellEditable={(params) => params.row.id === 5}
-        experimentalFeatures={{ newEditingApi: true }}
       />
     </StyledBox>
   );

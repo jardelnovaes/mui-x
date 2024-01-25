@@ -1,6 +1,6 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import { HTMLElementType } from '@mui/utils';
+import { unstable_useEventCallback as useEventCallback, HTMLElementType } from '@mui/utils';
 import { useGridApiContext } from '../../../hooks/utils/useGridApiContext';
 import { GridMenu, GridMenuProps } from '../GridMenu';
 
@@ -11,7 +11,7 @@ export interface GridColumnHeaderMenuProps {
   contentComponentProps?: any;
   field: string;
   open: boolean;
-  target: Element | null;
+  target: HTMLElement | null;
   onExited?: GridMenuProps['onExited'];
 }
 
@@ -26,31 +26,34 @@ function GridColumnHeaderMenu({
   onExited,
 }: GridColumnHeaderMenuProps) {
   const apiRef = useGridApiContext();
-  const currentColumn = apiRef.current.getColumn(field);
+  const colDef = apiRef.current.getColumn(field);
 
-  const hideMenu = React.useCallback(
-    (event: MouseEvent | TouchEvent) => {
+  const hideMenu = useEventCallback((event?: Event) => {
+    if (event) {
       // Prevent triggering the sorting
       event.stopPropagation();
-      apiRef.current.hideColumnMenu();
-    },
-    [apiRef],
-  );
 
-  if (!target) {
+      if (target?.contains(event.target as HTMLElement)) {
+        return;
+      }
+    }
+    apiRef.current.hideColumnMenu();
+  });
+
+  if (!target || !colDef) {
     return null;
   }
 
   return (
     <GridMenu
-      placement={`bottom-${currentColumn!.align === 'right' ? 'start' : 'end'}` as any}
+      placement={`bottom-${colDef!.align === 'right' ? 'start' : 'end'}` as any}
       open={open}
       target={target}
-      onClickAway={hideMenu}
+      onClose={hideMenu}
       onExited={onExited}
     >
       <ContentComponent
-        currentColumn={currentColumn}
+        colDef={colDef}
         hideMenu={hideMenu}
         open={open}
         id={columnMenuId}

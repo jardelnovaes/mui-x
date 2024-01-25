@@ -2,7 +2,7 @@ import * as ts from 'typescript';
 import * as prettier from 'prettier';
 import kebabCase from 'lodash/kebabCase';
 import path from 'path';
-import { renderInline as renderMarkdownInline } from '@mui/monorepo/docs/packages/markdown';
+import { renderMarkdown } from '@mui/monorepo/packages/markdown';
 import {
   escapeCell,
   getSymbolDescription,
@@ -13,11 +13,15 @@ import {
   resolveExportSpecifier,
   DocumentedInterfaces,
 } from './utils';
-import { Projects, Project, ProjectNames } from '../getTypeScriptProjects';
+import {
+  XTypeScriptProjects,
+  XTypeScriptProject,
+  XProjectNames,
+} from '../createXTypeScriptProjects';
 
 interface ParsedObject {
   name: string;
-  projects: ProjectNames[];
+  projects: XProjectNames[];
   description?: string;
   properties: ParsedProperty[];
   tags: { [tagName: string]: ts.JSDocTagInfo };
@@ -32,25 +36,26 @@ interface ParsedProperty {
   /**
    * Name of the projects on which the interface has this property
    */
-  projects: ProjectNames[];
+  projects: XProjectNames[];
 }
 
 const GRID_API_INTERFACES_WITH_DEDICATED_PAGES = [
-  'GridSelectionApi',
-  'GridFilterApi',
-  'GridSortApi',
-  'GridPaginationApi',
-  'GridCsvExportApi',
-  'GridScrollApi',
-  'GridEditingApi',
-  'GridOldEditingApi',
-  'GridNewEditingApi',
-  'GridRowGroupingApi',
+  'GridCellSelectionApi',
   'GridColumnPinningApi',
+  'GridColumnResizeApi',
+  'GridCsvExportApi',
   'GridDetailPanelApi',
-  'GridPrintExportApi',
-  'GridDisableVirtualizationApi',
+  'GridEditingApi',
   'GridExcelExportApi',
+  'GridFilterApi',
+  'GridPaginationApi',
+  'GridPrintExportApi',
+  'GridRowGroupingApi',
+  'GridRowMultiSelectionApi',
+  'GridRowSelectionApi',
+  'GridScrollApi',
+  'GridSortApi',
+  'GridVirtualizationApi',
 ];
 
 const OTHER_GRID_INTERFACES_WITH_DEDICATED_PAGES = [
@@ -62,9 +67,12 @@ const OTHER_GRID_INTERFACES_WITH_DEDICATED_PAGES = [
   'GridRowParams',
   'GridRowClassNameParams',
   'GridRowSpacingParams',
+  'GridExportStateParams',
 
   // Others
   'GridColDef',
+  'GridSingleSelectColDef',
+  'GridActionsColDef',
   'GridCsvExportOptions',
   'GridPrintExportOptions',
   'GridExcelExportOptions',
@@ -73,9 +81,12 @@ const OTHER_GRID_INTERFACES_WITH_DEDICATED_PAGES = [
   'GridFilterModel',
   'GridFilterItem',
   'GridFilterOperator',
+
+  // Aggregation
+  'GridAggregationFunction',
 ];
 
-const parseProperty = (propertySymbol: ts.Symbol, project: Project): ParsedProperty => ({
+const parseProperty = (propertySymbol: ts.Symbol, project: XTypeScriptProject): ParsedProperty => ({
   name: propertySymbol.name,
   description: getSymbolDescription(propertySymbol, project),
   tags: getSymbolJSDocTags(propertySymbol),
@@ -85,7 +96,7 @@ const parseProperty = (propertySymbol: ts.Symbol, project: Project): ParsedPrope
 });
 
 interface ProjectInterface {
-  project: Project;
+  project: XTypeScriptProject;
   symbol: ts.Symbol;
   type: ts.Type;
   declaration: ts.InterfaceDeclaration;
@@ -94,7 +105,7 @@ interface ProjectInterface {
 const parseInterfaceSymbol = (
   interfaceName: string,
   documentedInterfaces: DocumentedInterfaces,
-  projects: Projects,
+  projects: XTypeScriptProjects,
 ): ParsedObject | null => {
   const projectInterfaces = documentedInterfaces
     .get(interfaceName)!
@@ -108,12 +119,7 @@ const parseInterfaceSymbol = (
 
       const exportedSymbol = project.exports[interfaceName];
       const type = project.checker.getDeclaredTypeOfSymbol(exportedSymbol);
-      const typeDeclaration = type.symbol.declarations?.[0];
       const symbol = resolveExportSpecifier(exportedSymbol, project);
-
-      if (!typeDeclaration || !ts.isInterfaceDeclaration(typeDeclaration)) {
-        return null;
-      }
 
       return {
         symbol,
@@ -187,10 +193,10 @@ function generateMarkdownFromProperties(
       planImg = '';
     } else if (property.projects.includes('x-data-grid-pro')) {
       planImg =
-        ' [<span class="plan-pro" title="Pro plan"></span>](https://mui.com/store/items/mui-x-pro/)';
+        ' [<span class="plan-pro" title="Pro plan"></span>](/x/introduction/licensing/#pro-plan)';
     } else if (property.projects.includes('x-data-grid-premium')) {
       planImg =
-        ' [<span class="plan-premium" title="Premium plan"></span>](https://mui.com/store/items/material-ui-premium/)';
+        ' [<span class="plan-premium" title="Premium plan"></span>](/x/introduction/licensing/#premium-plan)';
     } else {
       throw new Error(`No valid plan found for ${property.name} property in ${object.name}`);
     }
@@ -218,20 +224,12 @@ function generateMarkdownFromProperties(
   return text;
 }
 
-function generateImportStatement(objects: ParsedObject[], projects: Projects) {
+function generateImportStatement(objects: ParsedObject[], projects: XTypeScriptProjects) {
   let imports = '```js\n';
 
   const projectImports = Array.from(projects.values())
     .map((project) => {
       const objectsInProject = objects.filter((object) => {
-        // TODO: Remove after opening the apiRef on the community plan
-        if (
-          ['GridApiCommunity', 'GridApi'].includes(object.name) &&
-          project.name === 'x-data-grid'
-        ) {
-          return false;
-        }
-
         return !!project.exports[object.name];
       });
 
@@ -260,14 +258,26 @@ function generateImportStatement(objects: ParsedObject[], projects: Projects) {
 
 function generateMarkdown(
   object: ParsedObject,
-  projects: Projects,
+  projects: XTypeScriptProjects,
   documentedInterfaces: DocumentedInterfaces,
 ) {
+  const demos = object.tags.demos;
   const description = linkify(object.description, documentedInterfaces, 'html');
   const imports = generateImportStatement([object], projects);
 
   let text = `# ${object.name} Interface\n`;
   text += `<p class="description">${description}</p>\n\n`;
+
+  if (demos && demos.text && demos.text.length > 0) {
+    text += '## Demos\n\n';
+    text += ':::info\n';
+    text += 'For examples and details on the usage, check the following pages:\n\n';
+    demos.text.forEach((demoLink) => {
+      text += demoLink.text;
+    });
+    text += '\n\n:::\n\n';
+  }
+
   text += '## Import\n\n';
   text += `${imports}\n\n`;
   text += '## Properties\n\n';
@@ -277,12 +287,12 @@ function generateMarkdown(
 }
 
 interface BuildInterfacesDocumentationOptions {
-  projects: Projects;
-  documentationRoot: string;
+  projects: XTypeScriptProjects;
+  apiPagesFolder: string;
 }
 
 export default function buildInterfacesDocumentation(options: BuildInterfacesDocumentationOptions) {
-  const { projects, documentationRoot } = options;
+  const { projects, apiPagesFolder } = options;
 
   const allProjectsName = Array.from(projects.keys());
 
@@ -317,14 +327,12 @@ export default function buildInterfacesDocumentation(options: BuildInterfacesDoc
         description: linkify(parsedInterface.description, documentedInterfaces, 'html'),
         properties: parsedInterface.properties.map((property) => ({
           name: property.name,
-          description: renderMarkdownInline(
-            linkify(property.description, documentedInterfaces, 'html'),
-          ),
+          description: renderMarkdown(linkify(property.description, documentedInterfaces, 'html')),
           type: property.typeStr,
         })),
       };
       writePrettifiedFile(
-        path.resolve(documentationRoot, project.documentationFolderName, `${slug}.json`),
+        path.resolve(apiPagesFolder, project.documentationFolderName, `${slug}.json`),
         JSON.stringify(json),
         project,
       );
@@ -333,19 +341,19 @@ export default function buildInterfacesDocumentation(options: BuildInterfacesDoc
     } else {
       const markdown = generateMarkdown(parsedInterface, projects, documentedInterfaces);
       writePrettifiedFile(
-        path.resolve(documentationRoot, project.documentationFolderName, `${slug}.md`),
+        path.resolve(apiPagesFolder, project.documentationFolderName, `${slug}.md`),
         markdown,
         project,
       );
 
       writePrettifiedFile(
-        path.resolve(documentationRoot, project.documentationFolderName, `${slug}.js`),
+        path.resolve(apiPagesFolder, project.documentationFolderName, `${slug}.js`),
         `import * as React from 'react';
     import MarkdownDocs from '@mui/monorepo/docs/src/modules/components/MarkdownDocs';
-    import { demos, docs, demoComponents } from './${slug}.md?@mui/markdown';
+    import * as pageProps from './${slug}.md?@mui/markdown';
 
     export default function Page() {
-      return <MarkdownDocs demos={demos} docs={docs} demoComponents={demoComponents} />;
+      return <MarkdownDocs {...pageProps} />;
     }
         `,
         project,

@@ -1,8 +1,7 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import Box from '@mui/material/Box';
 import Rating from '@mui/material/Rating';
-import { DataGrid } from '@mui/x-data-grid';
+import { DataGrid, GridToolbarFilterButton } from '@mui/x-data-grid';
 import { useDemoData } from '@mui/x-data-grid-generator';
 
 function RatingInputValue(props) {
@@ -33,7 +32,6 @@ function RatingInputValue(props) {
     >
       <Rating
         name="custom-rating-filter-operator"
-        placeholder="Filter value"
         value={Number(item.value)}
         onChange={handleFilterChange}
         precision={0.5}
@@ -43,47 +41,12 @@ function RatingInputValue(props) {
   );
 }
 
-RatingInputValue.propTypes = {
-  applyValue: PropTypes.func.isRequired,
-  focusElementRef: PropTypes.oneOfType([
-    PropTypes.func,
-    PropTypes.shape({
-      current: PropTypes.any.isRequired,
-    }),
-  ]),
-  item: PropTypes.shape({
-    /**
-     * The column from which we want to filter the rows.
-     */
-    columnField: PropTypes.string.isRequired,
-    /**
-     * Must be unique.
-     * Only useful when the model contains several items.
-     */
-    id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-    /**
-     * The name of the operator we want to apply.
-     * Will become required on `@mui/x-data-grid@6.X`.
-     */
-    operatorValue: PropTypes.string,
-    /**
-     * The filtering value.
-     * The operator filtering function will decide for each row if the row values is correct compared to this value.
-     */
-    value: PropTypes.any,
-  }).isRequired,
-};
-
 const ratingOnlyOperators = [
   {
     label: 'Above',
     value: 'above',
     getApplyFilterFn: (filterItem) => {
-      if (
-        !filterItem.columnField ||
-        !filterItem.value ||
-        !filterItem.operatorValue
-      ) {
+      if (!filterItem.field || !filterItem.value || !filterItem.operator) {
         return null;
       }
 
@@ -93,6 +56,7 @@ const ratingOnlyOperators = [
     },
     InputComponent: RatingInputValue,
     InputComponentProps: { type: 'number' },
+    getValueAsString: (value) => `${value} Stars`,
   },
 ];
 
@@ -123,16 +87,20 @@ export default function CustomRatingOperator() {
       <DataGrid
         {...data}
         columns={columns}
+        slots={{
+          toolbar: GridToolbarFilterButton,
+        }}
         initialState={{
           ...data.initialState,
           filter: {
+            ...data.initialState?.filter,
             filterModel: {
               items: [
                 {
                   id: 1,
-                  columnField: 'rating',
+                  field: 'rating',
                   value: '3.5',
-                  operatorValue: 'above',
+                  operator: 'above',
                 },
               ],
             },

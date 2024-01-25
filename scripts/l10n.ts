@@ -8,11 +8,14 @@ import * as babelTypes from '@babel/types';
 import * as yargs from 'yargs';
 import { Octokit } from '@octokit/rest';
 import { retry } from '@octokit/plugin-retry';
+import localeNames from './localeNames';
+import nextConfig from '../docs/next.config';
 
 const MyOctokit = Octokit.plugin(retry);
 
 const GIT_ORGANIZATION = 'mui';
 const GIT_REPO = 'mui-x';
+// https://github.com/mui/mui-x/issues/3211
 const L10N_ISSUE_ID = 3211;
 const SOURCE_CODE_REPO = `https://github.com/${GIT_ORGANIZATION}/${GIT_REPO}`;
 
@@ -22,12 +25,14 @@ const packagesWithL10n = [
     reportName: '🧑‍💼 DataGrid, DataGridPro, DataGridPremium',
     constantsRelativePath: 'packages/grid/x-data-grid/src/constants/localeTextConstants.ts',
     localesRelativePath: 'packages/grid/x-data-grid/src/locales',
+    documentationReportPath: 'docs/data/data-grid/localization/data.json',
   },
   {
     key: 'pickers',
     reportName: '📅🕒 Date and Time Pickers',
     constantsRelativePath: 'packages/x-date-pickers/src/locales/enUS.ts',
     localesRelativePath: 'packages/x-date-pickers/src/locales',
+    documentationReportPath: 'docs/data/date-pickers/localization/data.json',
   },
 ];
 
@@ -62,7 +67,7 @@ function plugin(existingTranslations: Translations): babel.PluginObj {
           }
 
           // Test if the variable name follows the pattern xxXXGrid or xxXXPickers
-          if (!/[a-z]{2}[A-Z]{2}(Grid|Pickers)/.test(node.id.name)) {
+          if (!/[a-z]{2}[A-Z]{2}|[a-z]{2}(Grid|Pickers)/.test(node.id.name)) {
             visitorPath.skip();
             return;
           }
@@ -76,11 +81,17 @@ function plugin(existingTranslations: Translations): babel.PluginObj {
           }
 
           node.init.properties.forEach((property) => {
-            if (!babelTypes.isObjectProperty(property) || !babelTypes.isIdentifier(property.key)) {
+            if (
+              !babelTypes.isObjectProperty(property) ||
+              !(babelTypes.isIdentifier(property.key) || babelTypes.isStringLiteral(property.key))
+            ) {
               return;
             }
-            const name = property.key.name;
-            existingTranslations[name] = property.value;
+            // The stringLiteral keys are wrapped into `'` such that we can distinguish them from identifiers.
+            const key = babelTypes.isIdentifier(property.key)
+              ? (property.key as babelTypes.Identifier).name
+              : `'${(property.key as babelTypes.StringLiteral).value}'`;
+            existingTranslations[key] = property.value;
           });
         },
         exit(visitorPath) {
@@ -124,7 +135,9 @@ function extractTranslations(translationsPath: string): [TranslationsByGroup, Tr
           return;
         }
 
-        const key = (property.key as babelTypes.Identifier).name;
+        const key =
+          (property.key as babelTypes.Identifier).name ||
+          `'${(property.key as babelTypes.StringLiteral).value}'`;
 
         // Ignore translations for MUI Core components, e.g. MuiTablePagination
         if (key.startsWith('Mui')) {
@@ -151,7 +164,7 @@ function extractTranslations(translationsPath: string): [TranslationsByGroup, Tr
 function findLocales(localesDirectory: string, constantsPath: string) {
   const items = fse.readdirSync(localesDirectory);
   const locales: any[] = [];
-  const localeRegex = /^[a-z]{2}[A-Z]{2}/;
+  const localeRegex = /^[a-z]{2}[A-Z]{2}|^[a-z]{2}(?=.ts)/;
 
   items.forEach((item) => {
     const match = item.match(localeRegex);
@@ -160,7 +173,10 @@ function findLocales(localesDirectory: string, constantsPath: string) {
     }
 
     const localePath = path.resolve(localesDirectory, item);
-    const code = match[0];
+    if (fse.lstatSync(localePath).isDirectory()) {
+      return;
+    }
+    const code = match[0] || match[1];
     if (constantsPath !== localePath) {
       // Ignore the locale used as a reference
       locales.push([localePath, code]);
@@ -178,7 +194,7 @@ function extractAndReplaceTranslations(localePath: string) {
     configFile: false,
     retainLines: true,
   })!;
-  return { translations, transformedCode: code, rawCode: file };
+  return { translations, transformedCode: code };
 }
 
 function injectTranslations(
@@ -193,7 +209,9 @@ function injectTranslations(
     lines.push(`\n\n// ${group}`);
 
     Object.entries(translations).forEach(([key, value]) => {
-      const valueToTransform = existingTranslations[key] || value;
+      const valueToTransform =
+        existingTranslations[key] || existingTranslations[`'${key}'`] || value;
+      const isKeyStringLiteral = !existingTranslations[key] && existingTranslations[`'${key}'`];
       const ast = astBuilder({ value: valueToTransform }) as babelTypes.Statement;
       const result = babel.transformFromAstSync(babelTypes.program([ast]), undefined, {
         plugins: BABEL_PLUGINS,
@@ -201,9 +219,9 @@ function injectTranslations(
       });
 
       const valueAsCode = result!.code!.replace(/^const _ = (.*);/gs, '$1');
-      const comment = !existingTranslations[key] ? '// ' : '';
+      const comment = !existingTranslations[key] && !existingTranslations[`'${key}'`] ? '// ' : '';
 
-      lines.push(`${comment}${key}: ${valueAsCode},`);
+      lines.push(`${comment}${isKeyStringLiteral ? `'${key}'` : key}: ${valueAsCode},`);
     });
   });
 
@@ -284,6 +302,63 @@ async function generateReport(missingTranslations: MissingTranslations) {
   return lines.join('\n');
 }
 
+type DocumentationReportItem = {
+  languageTag: string;
+  importName: string;
+  localeName: string;
+  missingKeysCount: number;
+  totalKeysCount: number;
+  githubLink: string;
+};
+const generateDocReport = async (
+  missingTranslations: MissingTranslations,
+  baseTranslationsNumber,
+) => {
+  const workspaceRoot = path.resolve(__dirname, '../');
+
+  packagesWithL10n.forEach(async ({ key: packageKey, documentationReportPath }) => {
+    const documentationReport: DocumentationReportItem[] = [];
+    Object.entries(missingTranslations).forEach(([importName, infoPerPackage]) => {
+      const info = infoPerPackage[packageKey];
+      if (info == null) {
+        return;
+      }
+
+      const languageTag =
+        importName.length > 2
+          ? `${importName.slice(0, 2).toLowerCase()}-${importName.slice(2).toUpperCase()}`
+          : importName;
+      const localeName = localeNames[languageTag];
+
+      if (localeName === undefined) {
+        throw new Error(
+          [
+            `locale tag ${languageTag} is not associated to a locale name.`,
+            'If this tag is correct, add its name to the file `scripts/localeNames.js`',
+          ].join('\n'),
+        );
+      }
+      documentationReport.push({
+        languageTag,
+        importName,
+        localeName,
+        missingKeysCount: infoPerPackage[packageKey].missingKeys.length,
+        totalKeysCount: baseTranslationsNumber[packageKey],
+        githubLink: `${nextConfig.env.SOURCE_CODE_REPO}/blob/${nextConfig.env.SOURCE_GITHUB_BRANCH}/${info.path}`,
+      });
+    });
+
+    await fse.writeFileSync(
+      path.join(workspaceRoot, documentationReportPath),
+      `${JSON.stringify(
+        documentationReport.sort((a, b) => a.localeName.localeCompare(b.localeName)),
+        null,
+        2,
+      )}\n`,
+    );
+  });
+};
+
 async function updateIssue(githubToken, newMessage) {
   // Initialize the API client
   const octokit = new MyOctokit({
@@ -321,20 +396,20 @@ async function run(argv: yargs.ArgumentsCamelCase<HandlerArgv>) {
   const workspaceRoot = path.resolve(__dirname, '../');
 
   const missingTranslations: Record<string, any> = {};
+  const baseTranslationsNumber: Record<string, number> = {};
 
   packagesWithL10n.forEach((packageInfo) => {
     const constantsPath = path.join(workspaceRoot, packageInfo.constantsRelativePath);
     const [baseTranslationsByGroup, baseTranslations] = extractTranslations(constantsPath);
 
+    baseTranslationsNumber[packageInfo.key] = Object.keys(baseTranslations).length;
+
     const localesDirectory = path.resolve(workspaceRoot, packageInfo.localesRelativePath);
     const locales = findLocales(localesDirectory, constantsPath);
 
     locales.forEach(([localePath, localeCode]) => {
-      const {
-        translations: existingTranslations,
-        transformedCode,
-        rawCode,
-      } = extractAndReplaceTranslations(localePath);
+      const { translations: existingTranslations, transformedCode } =
+        extractAndReplaceTranslations(localePath);
 
       if (!transformedCode || Object.keys(existingTranslations).length === 0) {
         return;
@@ -366,10 +441,13 @@ async function run(argv: yargs.ArgumentsCamelCase<HandlerArgv>) {
           missingKeys: [],
         };
       }
-      const lines = rawCode.split('\n');
+      const lines = codeWithNewTranslations.split('\n');
       Object.entries(baseTranslations).forEach(([key]) => {
-        if (!existingTranslations[key]) {
-          const location = lines.findIndex((line) => line.trim().startsWith(`// ${key}:`));
+        if (!existingTranslations[key] && !existingTranslations[`'${key}'`]) {
+          const location = lines.findIndex(
+            (line) =>
+              line.trim().startsWith(`// ${key}:`) || line.trim().startsWith(`// '${key}':`),
+          );
           // Ignore when both the translation and the placeholder are missing
           if (location >= 0) {
             missingTranslations[localeCode][packageInfo.key].missingKeys.push({
@@ -387,6 +465,8 @@ async function run(argv: yargs.ArgumentsCamelCase<HandlerArgv>) {
       }
     });
   });
+
+  await generateDocReport(missingTranslations, baseTranslationsNumber);
 
   if (report) {
     const newMessage = await generateReport(missingTranslations);

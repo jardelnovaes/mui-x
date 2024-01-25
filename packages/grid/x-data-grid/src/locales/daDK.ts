@@ -6,7 +6,6 @@ const daDKGrid: Partial<GridLocaleText> = {
   // Root
   noRowsLabel: 'Ingen rækker',
   noResultsOverlayLabel: 'Ingen resultater',
-  errorOverlayDefaultLabel: 'Der skete en fejl.',
 
   // Density selector toolbar button text
   toolbarDensity: 'Tæthed',
@@ -28,16 +27,16 @@ const daDKGrid: Partial<GridLocaleText> = {
     count !== 1 ? `${count} aktive filtre` : `${count} aktivt filter`,
 
   // Quick filter toolbar field
-  // toolbarQuickFilterPlaceholder: 'Search...',
-  // toolbarQuickFilterLabel: 'Search',
-  // toolbarQuickFilterDeleteIconLabel: 'Clear',
+  toolbarQuickFilterPlaceholder: 'Søg…',
+  toolbarQuickFilterLabel: 'Søg',
+  toolbarQuickFilterDeleteIconLabel: 'Ryd',
 
   // Export selector toolbar button text
-  // toolbarExport: 'Export',
+  toolbarExport: 'Eksport',
   toolbarExportLabel: 'Eksporter',
   toolbarExportCSV: 'Download som CSV',
   toolbarExportPrint: 'Print',
-  // toolbarExportExcel: 'Download as Excel',
+  toolbarExportExcel: 'Download som Excel',
 
   // Columns panel text
   columnsPanelTextFieldLabel: 'Find kolonne',
@@ -48,11 +47,10 @@ const daDKGrid: Partial<GridLocaleText> = {
 
   // Filter panel text
   filterPanelAddFilter: 'Tilføj filter',
+  filterPanelRemoveAll: 'Fjern alle',
   filterPanelDeleteIconLabel: 'Slet',
-  filterPanelLinkOperator: 'Logisk operator',
-  filterPanelOperators: 'Operatorer',
-
-  // TODO v6: rename to filterPanelOperator
+  filterPanelLogicOperator: 'Logisk operator',
+  filterPanelOperator: 'Operatorer',
   filterPanelOperatorAnd: 'Og',
   filterPanelOperatorOr: 'Eller',
   filterPanelColumns: 'Kolonne',
@@ -60,19 +58,46 @@ const daDKGrid: Partial<GridLocaleText> = {
   filterPanelInputPlaceholder: 'Filter værdi',
 
   // Filter operators text
-  filterOperatorContains: 'Indeholder',
-  filterOperatorEquals: 'Lig med',
-  filterOperatorStartsWith: 'Begynder med',
-  filterOperatorEndsWith: 'Ender med',
-  filterOperatorIs: 'Er lig med',
-  filterOperatorNot: 'Er ikke lig med',
-  filterOperatorAfter: 'Efter',
-  filterOperatorOnOrAfter: 'På eller efter',
-  filterOperatorBefore: 'Før',
-  filterOperatorOnOrBefore: 'På eller før',
-  filterOperatorIsEmpty: 'Indeholder ikke data',
-  filterOperatorIsNotEmpty: 'Indeholder data',
+  filterOperatorContains: 'indeholder',
+  filterOperatorEquals: 'lig med',
+  filterOperatorStartsWith: 'begynder med',
+  filterOperatorEndsWith: 'ender med',
+  filterOperatorIs: 'er lig med',
+  filterOperatorNot: 'er ikke lig med',
+  filterOperatorAfter: 'efter',
+  filterOperatorOnOrAfter: 'på eller efter',
+  filterOperatorBefore: 'før',
+  filterOperatorOnOrBefore: 'på eller før',
+  filterOperatorIsEmpty: 'indeholder ikke data',
+  filterOperatorIsNotEmpty: 'indeholder data',
   filterOperatorIsAnyOf: 'indeholder en af',
+  'filterOperator=': '=',
+  'filterOperator!=': '!=',
+  'filterOperator>': '>',
+  'filterOperator>=': '>=',
+  'filterOperator<': '<',
+  'filterOperator<=': '<=',
+
+  // Header filter operators text
+  headerFilterOperatorContains: 'Indeholder',
+  headerFilterOperatorEquals: 'Lig med',
+  headerFilterOperatorStartsWith: 'Begynder med',
+  headerFilterOperatorEndsWith: 'Ender med',
+  headerFilterOperatorIs: 'Er lig med',
+  headerFilterOperatorNot: 'Er ikke lig med',
+  headerFilterOperatorAfter: 'Efter',
+  headerFilterOperatorOnOrAfter: 'På eller efter',
+  headerFilterOperatorBefore: 'Før',
+  headerFilterOperatorOnOrBefore: 'På eller før',
+  headerFilterOperatorIsEmpty: 'Indeholder ikke data',
+  headerFilterOperatorIsNotEmpty: 'Indeholder data',
+  headerFilterOperatorIsAnyOf: 'Indeholder en af',
+  'headerFilterOperator=': 'Lig med',
+  'headerFilterOperator!=': 'Ikke lig med',
+  'headerFilterOperator>': 'Større end',
+  'headerFilterOperator>=': 'Større end eller lig med',
+  'headerFilterOperator<': 'Mindre end',
+  'headerFilterOperator<=': 'Mindre end eller lig med',
 
   // Filter values text
   filterValueAny: 'hvilken som helst',
@@ -82,6 +107,7 @@ const daDKGrid: Partial<GridLocaleText> = {
   // Column menu text
   columnMenuLabel: 'Menu',
   columnMenuShowColumns: 'Vis Kolonner',
+  columnMenuManageColumns: 'Administrer kolonner',
   columnMenuFilter: 'Filtre',
   columnMenuHideColumn: 'Skjul',
   columnMenuUnsort: 'Fjern sortering',
@@ -135,11 +161,20 @@ const daDKGrid: Partial<GridLocaleText> = {
   unGroupColumn: (name) => `Fjern gruppéring efter ${name}`,
 
   // Master/detail
+  detailPanelToggle: 'Udvid/kollaps detaljepanel',
   expandDetailPanel: 'Udvid',
   collapseDetailPanel: 'Kollaps',
 
   // Row reordering text
-  // rowReorderingHeaderName: 'Row reordering',
+  rowReorderingHeaderName: 'Omarrangering af rækker',
+
+  // Aggregation
+  aggregationMenuItemHeader: 'Aggregation',
+  aggregationFunctionLabelSum: 'sum',
+  aggregationFunctionLabelAvg: 'gns',
+  aggregationFunctionLabelMin: 'min',
+  aggregationFunctionLabelMax: 'max',
+  aggregationFunctionLabelSize: 'størrelse',
 };
 
 export const daDK: Localization = getGridLocalization(daDKGrid, daDKCore);

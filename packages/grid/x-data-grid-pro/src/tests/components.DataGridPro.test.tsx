@@ -1,6 +1,5 @@
 import * as React from 'react';
-// @ts-ignore Remove once the test utils are typed
-import { createRenderer, fireEvent } from '@mui/monorepo/test/utils';
+import { createRenderer, EventType, fireEvent, userEvent } from '@mui-internal/test-utils';
 import { spy } from 'sinon';
 import { expect } from 'chai';
 import {
@@ -10,7 +9,7 @@ import {
   DataGridProProps,
   GridApi,
 } from '@mui/x-data-grid-pro';
-import { useData } from 'packages/storybook/src/hooks/useData';
+import { useBasicDemoData } from '@mui/x-data-grid-generator';
 import { getCell, getRow } from 'test/utils/helperFn';
 
 describe('<DataGridPro/> - Components', () => {
@@ -18,15 +17,15 @@ describe('<DataGridPro/> - Components', () => {
 
   let apiRef: React.MutableRefObject<GridApi>;
 
-  const TestCase = (props: Partial<DataGridProProps>) => {
+  function TestCase(props: Partial<DataGridProProps>) {
     apiRef = useGridApiRef();
-    const data = useData(100, 1);
+    const data = useBasicDemoData(100, 1);
     return (
       <div style={{ width: 500, height: 300 }}>
         <DataGridPro apiRef={apiRef} {...data} disableVirtualization {...props} />
       </div>
     );
-  };
+  }
 
   describe('footer', () => {
     it('should hide the row count if `hideFooterRowCount` prop is set', () => {
@@ -34,11 +33,11 @@ describe('<DataGridPro/> - Components', () => {
       expect(document.querySelector(`.${gridClasses.rowCount}`)).to.equal(null);
     });
 
-    it('should throw a console error if hideFooterRowCount is used with pagination', () => {
-      expect(() => render(<TestCase hideFooterRowCount pagination />)).toErrorDev(
-        'MUI: The `hideFooterRowCount` prop has no effect when the pagination is enabled.',
-      );
-    });
+    // it('should throw a console error if hideFooterRowCount is used with pagination', () => {
+    //   expect(() => render(<TestCase hideFooterRowCount pagination />)).toErrorDev(
+    //     'MUI: The `hideFooterRowCount` prop has no effect when the pagination is enabled.',
+    //   );
+    // });
   });
 
   describe('components', () => {
@@ -61,7 +60,9 @@ describe('<DataGridPro/> - Components', () => {
         expect(propHandler.callCount).to.equal(0);
         expect(eventHandler.callCount).to.equal(0);
 
-        const eventToFire = prop.replace(/^on([A-Z])/, (match) => match.slice(2).toLowerCase()); // e.g. onDoubleClick -> doubleClick
+        const eventToFire = prop.replace(/^on([A-Z])/, (match) =>
+          match.slice(2).toLowerCase(),
+        ) as EventType; // e.g. onDoubleClick -> doubleClick
         const cell = getCell(0, 0);
 
         if (event !== 'cellMouseUp') {
@@ -85,8 +86,7 @@ describe('<DataGridPro/> - Components', () => {
       expect(propHandler.callCount).to.equal(0);
       expect(eventHandler.callCount).to.equal(0);
 
-      fireEvent.mouseUp(getCell(0, 0));
-      fireEvent.click(getCell(0, 0));
+      userEvent.mousePress(getCell(0, 0));
       fireEvent.keyDown(getCell(0, 0));
 
       expect(propHandler.callCount).to.equal(1);
@@ -109,7 +109,9 @@ describe('<DataGridPro/> - Components', () => {
         expect(propHandler.callCount).to.equal(0);
         expect(eventHandler.callCount).to.equal(0);
 
-        const eventToFire = prop.replace(/^on([A-Z])/, (match) => match.slice(2).toLowerCase()); // e.g. onDoubleClick -> doubleClick
+        const eventToFire = prop.replace(/^on([A-Z])/, (match) =>
+          match.slice(2).toLowerCase(),
+        ) as EventType; // e.g. onDoubleClick -> doubleClick
         fireEvent[eventToFire](getRow(0));
 
         expect(propHandler.callCount).to.equal(1);

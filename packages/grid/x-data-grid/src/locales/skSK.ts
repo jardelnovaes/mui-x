@@ -6,7 +6,6 @@ const skSKGrid: Partial<GridLocaleText> = {
   // Root
   noRowsLabel: 'Žiadne záznamy',
   noResultsOverlayLabel: 'Nenašli sa žadne výsledky.',
-  errorOverlayDefaultLabel: 'Stala sa nepredvídaná chyba.',
 
   // Density selector toolbar button text
   toolbarDensity: 'Hustota',
@@ -26,27 +25,25 @@ const skSKGrid: Partial<GridLocaleText> = {
   toolbarFiltersTooltipShow: 'Zobraziť filtre',
   toolbarFiltersTooltipActive: (count) => {
     let pluralForm = 'aktívnych filtrov';
-
     if (count > 1 && count < 5) {
       pluralForm = 'aktívne filtre';
     } else if (count === 1) {
       pluralForm = 'aktívny filter';
     }
-
     return `${count} ${pluralForm}`;
   },
 
   // Quick filter toolbar field
-  // toolbarQuickFilterPlaceholder: 'Search...',
-  // toolbarQuickFilterLabel: 'Search',
-  // toolbarQuickFilterDeleteIconLabel: 'Clear',
+  toolbarQuickFilterPlaceholder: 'Vyhľadať…',
+  toolbarQuickFilterLabel: 'Vyhľadať',
+  toolbarQuickFilterDeleteIconLabel: 'Vymazať',
 
   // Export selector toolbar button text
   toolbarExport: 'Export',
   toolbarExportLabel: 'Export',
   toolbarExportCSV: 'Stiahnuť ako CSV',
   toolbarExportPrint: 'Vytlačiť',
-  // toolbarExportExcel: 'Download as Excel',
+  toolbarExportExcel: 'Stiahnuť ako Excel',
 
   // Columns panel text
   columnsPanelTextFieldLabel: 'Nájsť stĺpec',
@@ -57,11 +54,10 @@ const skSKGrid: Partial<GridLocaleText> = {
 
   // Filter panel text
   filterPanelAddFilter: 'Pridať filter',
+  filterPanelRemoveAll: 'Odstrániť všetky',
   filterPanelDeleteIconLabel: 'Odstrániť',
-  // filterPanelLinkOperator: 'Logic operator',
-  filterPanelOperators: 'Operátory',
-
-  // TODO v6: rename to filterPanelOperator
+  filterPanelLogicOperator: 'Logický operátor',
+  filterPanelOperator: 'Operátory',
   filterPanelOperatorAnd: 'A',
   filterPanelOperatorOr: 'Alebo',
   filterPanelColumns: 'Stĺpce',
@@ -81,7 +77,34 @@ const skSKGrid: Partial<GridLocaleText> = {
   filterOperatorOnOrBefore: 'je na alebo skôr',
   filterOperatorIsEmpty: 'je prázdny',
   filterOperatorIsNotEmpty: 'nie je prázdny',
-  // filterOperatorIsAnyOf: 'is any of',
+  filterOperatorIsAnyOf: 'je jeden z',
+  'filterOperator=': '=',
+  'filterOperator!=': '!=',
+  'filterOperator>': '>',
+  'filterOperator>=': '>=',
+  'filterOperator<': '<',
+  'filterOperator<=': '<=',
+
+  // Header filter operators text
+  headerFilterOperatorContains: 'Obsahuje',
+  headerFilterOperatorEquals: 'Rovná sa',
+  headerFilterOperatorStartsWith: 'Začína s',
+  headerFilterOperatorEndsWith: 'Končí na',
+  headerFilterOperatorIs: 'Je',
+  headerFilterOperatorNot: 'Nie je',
+  headerFilterOperatorAfter: 'Je po',
+  headerFilterOperatorOnOrAfter: 'Je na alebo po',
+  headerFilterOperatorBefore: 'Je pred',
+  headerFilterOperatorOnOrBefore: 'Je na alebo skôr',
+  headerFilterOperatorIsEmpty: 'Je prázdny',
+  headerFilterOperatorIsNotEmpty: 'Nie je prázdny',
+  headerFilterOperatorIsAnyOf: 'Je jeden z',
+  'headerFilterOperator=': 'Rovná sa',
+  'headerFilterOperator!=': 'Nerovná sa',
+  'headerFilterOperator>': 'Väčší ako',
+  'headerFilterOperator>=': 'Väčší ako alebo rovný',
+  'headerFilterOperator<': 'Menší ako',
+  'headerFilterOperator<=': 'Menší ako alebo rovný',
 
   // Filter values text
   filterValueAny: 'akýkoľvek',
@@ -91,6 +114,7 @@ const skSKGrid: Partial<GridLocaleText> = {
   // Column menu text
   columnMenuLabel: 'Menu',
   columnMenuShowColumns: 'Zobraziť stĺpce',
+  columnMenuManageColumns: 'Spravovať stĺpce',
   columnMenuFilter: 'Filter',
   columnMenuHideColumn: 'Skryť',
   columnMenuUnsort: 'Zrušiť filtre',
@@ -100,13 +124,11 @@ const skSKGrid: Partial<GridLocaleText> = {
   // Column header text
   columnHeaderFiltersTooltipActive: (count) => {
     let pluralForm = 'aktívnych filtrov';
-
     if (count > 1 && count < 5) {
       pluralForm = 'aktívne filtre';
     } else if (count === 1) {
       pluralForm = 'aktívny filter';
     }
-
     return `${count} ${pluralForm}`;
   },
   columnHeaderFiltersLabel: 'Zobraziť filtre',
@@ -115,13 +137,11 @@ const skSKGrid: Partial<GridLocaleText> = {
   // Rows selected footer text
   footerRowSelected: (count) => {
     let pluralForm = 'vybraných záznamov';
-
     if (count > 1 && count < 5) {
       pluralForm = 'vybrané záznamy';
     } else if (count === 1) {
       pluralForm = 'vybraný záznam';
     }
-
     return `${count} ${pluralForm}`;
   },
 
@@ -141,10 +161,10 @@ const skSKGrid: Partial<GridLocaleText> = {
 
   // Checkbox selection text
   checkboxSelectionHeaderName: 'Výber riadku',
-  // checkboxSelectionSelectAllRows: 'Select all rows',
-  // checkboxSelectionUnselectAllRows: 'Unselect all rows',
-  // checkboxSelectionSelectRow: 'Select row',
-  // checkboxSelectionUnselectRow: 'Unselect row',
+  checkboxSelectionSelectAllRows: 'Vybrať všetky riadky',
+  checkboxSelectionUnselectAllRows: 'Zrušiť výber všetkých riadkov',
+  checkboxSelectionSelectRow: 'Vyber riadok',
+  checkboxSelectionUnselectRow: 'Zruš výber riadku',
 
   // Boolean cell text
   booleanCellTrueLabel: 'áno',
@@ -169,11 +189,20 @@ const skSKGrid: Partial<GridLocaleText> = {
   unGroupColumn: (name) => `Prestať zoskupovať podľa ${name}`,
 
   // Master/detail
-  // expandDetailPanel: 'Expand',
-  // collapseDetailPanel: 'Collapse',
+  detailPanelToggle: 'Prepnúť detail panelu',
+  expandDetailPanel: 'Rozbaliť',
+  collapseDetailPanel: 'Zbaliť',
 
   // Row reordering text
-  // rowReorderingHeaderName: 'Row reordering',
+  rowReorderingHeaderName: 'Preusporiadávanie riadkov',
+
+  // Aggregation
+  aggregationMenuItemHeader: 'Agregácia',
+  aggregationFunctionLabelSum: 'suma',
+  aggregationFunctionLabelAvg: 'priemer',
+  aggregationFunctionLabelMin: 'min',
+  aggregationFunctionLabelMax: 'max',
+  aggregationFunctionLabelSize: 'počet',
 };
 
 export const skSK: Localization = getGridLocalization(skSKGrid, skSKCore);

@@ -1,3 +1,37 @@
+import { spy } from 'sinon';
+import { act } from '@mui-internal/test-utils';
+import { unwrapPrivateAPI } from '@mui/x-data-grid/internals';
+import type { GridApiCommon } from '@mui/x-data-grid/models/api/gridApiCommon';
+
+export function sleep(duration: number): Promise<void> {
+  return new Promise<void>((resolve) => {
+    setTimeout(() => {
+      resolve();
+    }, duration);
+  });
+}
+
+export function microtasks() {
+  return act(() => Promise.resolve()) as unknown as Promise<void>;
+}
+
+export function spyApi(api: GridApiCommon, methodName: string) {
+  const methodKey = methodName as keyof GridApiCommon;
+  const privateApi = unwrapPrivateAPI(api);
+  const method = privateApi[methodKey];
+
+  const spyFn = spy((...args: any[]) => {
+    return spyFn.target(...args);
+  }) as any;
+  spyFn.spying = true;
+  spyFn.target = method;
+
+  api[methodKey] = spyFn;
+  privateApi[methodKey] = spyFn;
+
+  return spyFn;
+}
+
 export async function raf() {
   return new Promise<void>((resolve) => {
     // Chrome and Safari have a bug where calling rAF once returns the current
@@ -50,24 +84,20 @@ export function getActiveColumnHeader() {
   return `${Number(activeElement.getAttribute('aria-colindex')) - 1}`;
 }
 
-export function sleep(duration: number) {
-  return new Promise<void>((resolve) => {
-    setTimeout(() => {
-      resolve();
-    }, duration);
-  });
-}
-
 export function getColumnValues(colIndex: number) {
   return Array.from(document.querySelectorAll(`[role="cell"][data-colindex="${colIndex}"]`)).map(
     (node) => node!.textContent,
   );
 }
 
-export function getColumnHeaderCell(colIndex: number): HTMLElement {
+export function getColumnHeaderCell(colIndex: number, rowIndex?: number): HTMLElement {
+  const headerRowSelector =
+    rowIndex === undefined ? '' : `[role="row"][aria-rowindex="${rowIndex + 1}"] `;
+  const headerCellSelector = `[role="columnheader"][aria-colindex="${colIndex + 1}"]`;
   const columnHeader = document.querySelector<HTMLElement>(
-    `[role="columnheader"][aria-colindex="${colIndex + 1}"]`,
+    `${headerRowSelector}${headerCellSelector}`,
   );
+
   if (columnHeader == null) {
     throw new Error(`columnheader ${colIndex} not found`);
   }

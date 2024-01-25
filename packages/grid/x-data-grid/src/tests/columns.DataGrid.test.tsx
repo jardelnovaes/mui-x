@@ -1,30 +1,28 @@
 import * as React from 'react';
 import { expect } from 'chai';
-// @ts-ignore Remove once the test utils are typed
-import { createRenderer } from '@mui/monorepo/test/utils';
-import { DataGrid, DataGridProps, GridRowsProp, GridColumns } from '@mui/x-data-grid';
-import {
-  getColumnHeaderCell,
-  getColumnHeadersTextContent,
-} from '../../../../../test/utils/helperFn';
+import { createRenderer } from '@mui-internal/test-utils';
+import { DataGrid, DataGridProps, GridRowsProp, GridColDef } from '@mui/x-data-grid';
+import { getCell, getColumnHeaderCell, getColumnHeadersTextContent } from 'test/utils/helperFn';
 
 const isJSDOM = /jsdom/.test(window.navigator.userAgent);
 
 const rows: GridRowsProp = [{ id: 1, idBis: 1 }];
 
-const columns: GridColumns = [{ field: 'id' }, { field: 'idBis' }];
+const columns: GridColDef[] = [{ field: 'id' }, { field: 'idBis' }];
 
-describe('<DataGridPro /> - Columns', () => {
+describe('<DataGrid /> - Columns', () => {
   const { render } = createRenderer();
 
-  const TestDataGrid = (
+  function TestDataGrid(
     props: Omit<DataGridProps, 'columns' | 'rows'> &
       Partial<Pick<DataGridProps, 'rows' | 'columns'>>,
-  ) => (
-    <div style={{ width: 300, height: 300 }}>
-      <DataGrid columns={columns} rows={rows} {...props} autoHeight={isJSDOM} />
-    </div>
-  );
+  ) {
+    return (
+      <div style={{ width: 300, height: 300 }}>
+        <DataGrid columns={columns} rows={rows} {...props} autoHeight={isJSDOM} />
+      </div>
+    );
+  }
 
   describe('prop: initialState.columns.orderedFields / initialState.columns.dimensions', () => {
     it('should allow to initialize the columns order and dimensions', () => {
@@ -62,5 +60,65 @@ describe('<DataGridPro /> - Columns', () => {
 
       expect(getColumnHeaderCell(0)).toHaveInlineStyle({ width: '100px' });
     });
+  });
+
+  it('should allow to change the column type', () => {
+    const { setProps } = render(
+      <TestDataGrid columns={[{ field: 'id', type: 'string' }, { field: 'idBis' }]} />,
+    );
+    expect(getColumnHeaderCell(0)).not.to.have.class('MuiDataGrid-columnHeader--numeric');
+
+    setProps({ columns: [{ field: 'id', type: 'number' }, { field: 'idBis' }] });
+    expect(getColumnHeaderCell(0)).to.have.class('MuiDataGrid-columnHeader--numeric');
+  });
+
+  it('should not persist valueFormatter on column type change', () => {
+    const { setProps } = render(
+      <TestDataGrid
+        columns={[{ field: 'price', type: 'price', valueFormatter: ({ value }) => `$${value}` }]}
+        rows={[{ id: 0, price: 1 }]}
+      />,
+    );
+    expect(getCell(0, 0).textContent).to.equal('$1');
+
+    setProps({ columns: [{ field: 'price' }] });
+    expect(getCell(0, 0).textContent).to.equal('1');
+  });
+
+  it('should not override column properties when changing column type', () => {
+    const { setProps } = render(
+      <TestDataGrid
+        columns={[
+          {
+            field: 'id',
+            type: 'string',
+            width: 200,
+            valueFormatter: (params) => {
+              return `formatted: ${params.value}`;
+            },
+          },
+          { field: 'idBis' },
+        ]}
+      />,
+    );
+    expect(getColumnHeaderCell(0)).not.to.have.class('MuiDataGrid-columnHeader--numeric');
+    expect(getCell(0, 0).textContent).to.equal('formatted: 1');
+
+    setProps({
+      columns: [
+        {
+          field: 'id',
+          type: 'number',
+          width: 200,
+          valueFormatter: (params) => {
+            return `formatted: ${params.value}`;
+          },
+        },
+        { field: 'idBis' },
+      ],
+    } as Partial<DataGridProps>);
+    expect(getColumnHeaderCell(0)).to.have.class('MuiDataGrid-columnHeader--numeric');
+    // should not override valueFormatter with the default numeric one
+    expect(getCell(0, 0).textContent).to.equal('formatted: 1');
   });
 });

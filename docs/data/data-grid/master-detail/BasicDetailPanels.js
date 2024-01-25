@@ -1,5 +1,4 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
@@ -20,7 +19,10 @@ import {
 
 function DetailPanelContent({ row: rowProp }) {
   return (
-    <Stack sx={{ py: 2, height: 1, boxSizing: 'border-box' }} direction="column">
+    <Stack
+      sx={{ py: 2, height: '100%', boxSizing: 'border-box' }}
+      direction="column"
+    >
       <Paper sx={{ flex: 1, mx: 'auto', width: '90%', p: 1 }}>
         <Stack direction="column" spacing={1} sx={{ height: 1 }}>
           <Typography variant="h6">{`Order #${rowProp.id}`}</Typography>
@@ -72,10 +74,6 @@ function DetailPanelContent({ row: rowProp }) {
   );
 }
 
-DetailPanelContent.propTypes = {
-  row: PropTypes.object.isRequired,
-};
-
 const columns = [
   { field: 'id', headerName: 'Order ID' },
   { field: 'customer', headerName: 'Customer', width: 200 },
@@ -90,7 +88,6 @@ const columns = [
         (acc, product) => product.unitPrice * product.quantity,
         0,
       );
-
       const taxes = subtotal * 0.05;
       return subtotal + taxes;
     },
@@ -174,7 +171,7 @@ export default function BasicDetailPanels() {
   const getDetailPanelHeight = React.useCallback(() => 400, []);
 
   return (
-    <Box sx={{ width: 1, height: 400 }}>
+    <Box sx={{ width: '100%', height: 400 }}>
       <DataGridPro
         columns={columns}
         rows={rows}

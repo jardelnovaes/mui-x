@@ -1,10 +1,10 @@
 import { GridFilterInputValue } from '../components/panel/filterPanel/GridFilterInputValue';
 import { GridFilterInputMultipleValue } from '../components/panel/filterPanel/GridFilterInputMultipleValue';
 import { GridFilterOperator } from '../models/gridFilterOperator';
-import { wrapWithWarningOnCall } from '../utils/warning';
-import { GridCellParams } from '../models';
+import type { GridApplyQuickFilterV7 } from '../models/colDef/gridColDef';
+import { convertLegacyOperators, tagInternalFilter } from './utils';
 
-const parseNumericValue = (value: string | number | null | undefined) => {
+const parseNumericValue = (value: unknown) => {
   if (value == null) {
     return null;
   }
@@ -12,163 +12,150 @@ const parseNumericValue = (value: string | number | null | undefined) => {
   return Number(value);
 };
 
-export const getGridNumericQuickFilterFn = (value: any) => {
-  if (value == null || Number.isNaN(value) || value === '') {
-    return null;
-  }
+export const getGridNumericQuickFilterFn = tagInternalFilter(
+  (value: any): GridApplyQuickFilterV7 | null => {
+    if (value == null || Number.isNaN(value) || value === '') {
+      return null;
+    }
 
-  return ({ value: columnValue }: GridCellParams): boolean => {
-    return parseNumericValue(columnValue) === parseNumericValue(value);
-  };
-};
-
-export const getGridNumericOperators = (): GridFilterOperator<
-  any,
-  number | string | null,
-  any
->[] => [
-  {
-    label: '=',
-    value: '=',
-    getApplyFilterFn: (filterItem) => {
-      if (filterItem.value == null || Number.isNaN(filterItem.value)) {
-        return null;
-      }
-
-      return ({ value }): boolean => {
-        return parseNumericValue(value) === filterItem.value;
-      };
-    },
-    InputComponent: GridFilterInputValue,
-    InputComponentProps: { type: 'number' },
+    return (columnValue): boolean => {
+      return parseNumericValue(columnValue) === parseNumericValue(value);
+    };
   },
-  {
-    label: '!=',
-    value: '!=',
-    getApplyFilterFn: (filterItem) => {
-      if (filterItem.value == null || Number.isNaN(filterItem.value)) {
-        return null;
-      }
+);
 
-      return ({ value }): boolean => {
-        return parseNumericValue(value) !== filterItem.value;
-      };
-    },
-    InputComponent: GridFilterInputValue,
-    InputComponentProps: { type: 'number' },
-  },
-  {
-    label: '>',
-    value: '>',
-    getApplyFilterFn: (filterItem) => {
-      if (filterItem.value == null || Number.isNaN(filterItem.value)) {
-        return null;
-      }
-
-      return ({ value }): boolean => {
-        if (value == null) {
-          return false;
+export const getGridNumericOperators = (): GridFilterOperator<any, number | string | null, any>[] =>
+  convertLegacyOperators([
+    {
+      value: '=',
+      getApplyFilterFnV7: (filterItem) => {
+        if (filterItem.value == null || Number.isNaN(filterItem.value)) {
+          return null;
         }
 
-        return parseNumericValue(value)! > filterItem.value;
-      };
+        return (value): boolean => {
+          return parseNumericValue(value) === filterItem.value;
+        };
+      },
+      InputComponent: GridFilterInputValue,
+      InputComponentProps: { type: 'number' },
     },
-    InputComponent: GridFilterInputValue,
-    InputComponentProps: { type: 'number' },
-  },
-  {
-    label: '>=',
-    value: '>=',
-    getApplyFilterFn: (filterItem) => {
-      if (filterItem.value == null || Number.isNaN(filterItem.value)) {
-        return null;
-      }
-
-      return ({ value }): boolean => {
-        if (value == null) {
-          return false;
+    {
+      value: '!=',
+      getApplyFilterFnV7: (filterItem) => {
+        if (filterItem.value == null || Number.isNaN(filterItem.value)) {
+          return null;
         }
 
-        return parseNumericValue(value)! >= filterItem.value;
-      };
+        return (value): boolean => {
+          return parseNumericValue(value) !== filterItem.value;
+        };
+      },
+      InputComponent: GridFilterInputValue,
+      InputComponentProps: { type: 'number' },
     },
-    InputComponent: GridFilterInputValue,
-    InputComponentProps: { type: 'number' },
-  },
-  {
-    label: '<',
-    value: '<',
-    getApplyFilterFn: (filterItem) => {
-      if (filterItem.value == null || Number.isNaN(filterItem.value)) {
-        return null;
-      }
-
-      return ({ value }): boolean => {
-        if (value == null) {
-          return false;
+    {
+      value: '>',
+      getApplyFilterFnV7: (filterItem) => {
+        if (filterItem.value == null || Number.isNaN(filterItem.value)) {
+          return null;
         }
 
-        return parseNumericValue(value)! < filterItem.value;
-      };
-    },
-    InputComponent: GridFilterInputValue,
-    InputComponentProps: { type: 'number' },
-  },
-  {
-    label: '<=',
-    value: '<=',
-    getApplyFilterFn: (filterItem) => {
-      if (filterItem.value == null || Number.isNaN(filterItem.value)) {
-        return null;
-      }
+        return (value): boolean => {
+          if (value == null) {
+            return false;
+          }
 
-      return ({ value }): boolean => {
-        if (value == null) {
-          return false;
+          return parseNumericValue(value)! > filterItem.value;
+        };
+      },
+      InputComponent: GridFilterInputValue,
+      InputComponentProps: { type: 'number' },
+    },
+    {
+      value: '>=',
+      getApplyFilterFnV7: (filterItem) => {
+        if (filterItem.value == null || Number.isNaN(filterItem.value)) {
+          return null;
         }
 
-        return parseNumericValue(value)! <= filterItem.value;
-      };
-    },
-    InputComponent: GridFilterInputValue,
-    InputComponentProps: { type: 'number' },
-  },
-  {
-    value: 'isEmpty',
-    getApplyFilterFn: () => {
-      return ({ value }): boolean => {
-        return value == null;
-      };
-    },
-  },
-  {
-    value: 'isNotEmpty',
-    getApplyFilterFn: () => {
-      return ({ value }): boolean => {
-        return value != null;
-      };
-    },
-  },
-  {
-    value: 'isAnyOf',
-    getApplyFilterFn: (filterItem) => {
-      if (!Array.isArray(filterItem.value) || filterItem.value.length === 0) {
-        return null;
-      }
+        return (value): boolean => {
+          if (value == null) {
+            return false;
+          }
 
-      return ({ value }): boolean => {
-        return value != null && filterItem.value.includes(Number(value));
-      };
+          return parseNumericValue(value)! >= filterItem.value;
+        };
+      },
+      InputComponent: GridFilterInputValue,
+      InputComponentProps: { type: 'number' },
     },
-    InputComponent: GridFilterInputMultipleValue,
-    InputComponentProps: { type: 'number' },
-  },
-];
+    {
+      value: '<',
+      getApplyFilterFnV7: (filterItem) => {
+        if (filterItem.value == null || Number.isNaN(filterItem.value)) {
+          return null;
+        }
 
-/**
- * @deprecated Use `getGridNumericOperators` instead.
- */
-export const getGridNumericColumnOperators = wrapWithWarningOnCall(getGridNumericOperators, [
-  'MUI: The method getGridNumericColumnOperators is deprecated and will be removed in the next major version.',
-  'Use getGridNumericOperators instead.',
-]);
+        return (value): boolean => {
+          if (value == null) {
+            return false;
+          }
+
+          return parseNumericValue(value)! < filterItem.value;
+        };
+      },
+      InputComponent: GridFilterInputValue,
+      InputComponentProps: { type: 'number' },
+    },
+    {
+      value: '<=',
+      getApplyFilterFnV7: (filterItem) => {
+        if (filterItem.value == null || Number.isNaN(filterItem.value)) {
+          return null;
+        }
+
+        return (value): boolean => {
+          if (value == null) {
+            return false;
+          }
+
+          return parseNumericValue(value)! <= filterItem.value;
+        };
+      },
+      InputComponent: GridFilterInputValue,
+      InputComponentProps: { type: 'number' },
+    },
+    {
+      value: 'isEmpty',
+      getApplyFilterFnV7: () => {
+        return (value): boolean => {
+          return value == null;
+        };
+      },
+      requiresFilterValue: false,
+    },
+    {
+      value: 'isNotEmpty',
+      getApplyFilterFnV7: () => {
+        return (value): boolean => {
+          return value != null;
+        };
+      },
+      requiresFilterValue: false,
+    },
+    {
+      value: 'isAnyOf',
+      getApplyFilterFnV7: (filterItem) => {
+        if (!Array.isArray(filterItem.value) || filterItem.value.length === 0) {
+          return null;
+        }
+
+        return (value): boolean => {
+          return value != null && filterItem.value.includes(Number(value));
+        };
+      },
+      InputComponent: GridFilterInputMultipleValue,
+      InputComponentProps: { type: 'number' },
+    },
+  ]);

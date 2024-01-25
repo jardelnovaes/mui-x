@@ -7,9 +7,9 @@ import HomeIcon from '@mui/icons-material/Home';
 import {
   DataGridPro,
   useGridApiRef,
-  gridVisibleRowCountSelector,
+  gridExpandedRowCountSelector,
   gridVisibleColumnDefinitionsSelector,
-  gridVisibleSortedRowIdsSelector,
+  gridExpandedSortedRowIdsSelector,
   GridCellParams,
 } from '@mui/x-data-grid-pro';
 import { useDemoData } from '@mui/x-data-grid-generator';
@@ -30,13 +30,13 @@ export default function ScrollPlayground() {
   React.useEffect(() => {
     const { rowIndex, colIndex } = coordinates;
     apiRef.current.scrollToIndexes(coordinates);
-    const id = gridVisibleSortedRowIdsSelector(apiRef)[rowIndex];
+    const id = gridExpandedSortedRowIdsSelector(apiRef)[rowIndex];
     const column = gridVisibleColumnDefinitionsSelector(apiRef)[colIndex];
     apiRef.current.setCellFocus(id, column.field);
   }, [apiRef, coordinates]);
 
   const handleClick = (position: string) => () => {
-    const maxRowIndex = gridVisibleRowCountSelector(apiRef) - 1;
+    const maxRowIndex = gridExpandedRowCountSelector(apiRef) - 1;
     const maxColIndex = gridVisibleColumnDefinitionsSelector(apiRef).length - 1;
 
     setCoordinates((coords) => {
@@ -56,7 +56,7 @@ export default function ScrollPlayground() {
   };
 
   const handleCellClick = (params: GridCellParams) => {
-    const rowIndex = gridVisibleSortedRowIdsSelector(apiRef).findIndex(
+    const rowIndex = gridExpandedSortedRowIdsSelector(apiRef).findIndex(
       (id) => id === params.id,
     );
     const colIndex = gridVisibleColumnDefinitionsSelector(apiRef).findIndex(
@@ -66,7 +66,7 @@ export default function ScrollPlayground() {
   };
 
   return (
-    <div style={{ width: '100%' }}>
+    <Box sx={{ width: '100%' }}>
       <Box sx={{ width: 300, margin: '0 auto 16px' }}>
         <Grid container justifyContent="center">
           <Grid item>
@@ -96,7 +96,7 @@ export default function ScrollPlayground() {
           </Grid>
         </Grid>
       </Box>
-      <Box sx={{ height: 400, bgcolor: 'background.paper' }}>
+      <Box sx={{ height: 400 }}>
         <DataGridPro
           apiRef={apiRef}
           onCellClick={handleCellClick}
@@ -104,6 +104,6 @@ export default function ScrollPlayground() {
           {...data}
         />
       </Box>
-    </div>
+    </Box>
   );
 }

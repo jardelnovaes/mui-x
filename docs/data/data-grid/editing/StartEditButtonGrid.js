@@ -1,5 +1,4 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import { DataGrid, GridCellModes } from '@mui/x-data-grid';
@@ -61,7 +60,6 @@ function EditToolbar(props) {
         onClick={handleSaveOrEdit}
         onMouseDown={handleMouseDown}
         disabled={!selectedCellParams}
-        color="primary"
         variant="outlined"
       >
         {cellMode === 'edit' ? 'Save' : 'Edit'}
@@ -70,7 +68,6 @@ function EditToolbar(props) {
         onClick={handleCancel}
         onMouseDown={handleMouseDown}
         disabled={cellMode === 'view'}
-        color="primary"
         variant="outlined"
         sx={{ ml: 1 }}
       >
@@ -79,16 +76,6 @@ function EditToolbar(props) {
     </Box>
   );
 }
-
-EditToolbar.propTypes = {
-  cellMode: PropTypes.oneOf(['edit', 'view']).isRequired,
-  cellModesModel: PropTypes.object.isRequired,
-  selectedCellParams: PropTypes.shape({
-    field: PropTypes.string.isRequired,
-    id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-  }),
-  setCellModesModel: PropTypes.func.isRequired,
-};
 
 export default function StartEditButtonGrid() {
   const [selectedCellParams, setSelectedCellParams] = React.useState(null);
@@ -119,6 +106,10 @@ export default function StartEditButtonGrid() {
     [cellMode],
   );
 
+  const handleCellEditStop = React.useCallback((params, event) => {
+    event.defaultMuiPrevented = true;
+  }, []);
+
   return (
     <div style={{ height: 400, width: '100%' }}>
       <DataGrid
@@ -126,10 +117,12 @@ export default function StartEditButtonGrid() {
         columns={columns}
         onCellKeyDown={handleCellKeyDown}
         cellModesModel={cellModesModel}
-        components={{
-          Toolbar: EditToolbar,
+        onCellEditStop={handleCellEditStop}
+        onCellModesModelChange={(model) => setCellModesModel(model)}
+        slots={{
+          toolbar: EditToolbar,
         }}
-        componentsProps={{
+        slotProps={{
           toolbar: {
             cellMode,
             selectedCellParams,
@@ -141,7 +134,6 @@ export default function StartEditButtonGrid() {
             onFocus: handleCellFocus,
           },
         }}
-        experimentalFeatures={{ newEditingApi: true }}
       />
     </div>
   );
@@ -149,7 +141,14 @@ export default function StartEditButtonGrid() {
 
 const columns = [
   { field: 'name', headerName: 'Name', width: 180, editable: true },
-  { field: 'age', headerName: 'Age', type: 'number', editable: true },
+  {
+    field: 'age',
+    headerName: 'Age',
+    type: 'number',
+    editable: true,
+    align: 'left',
+    headerAlign: 'left',
+  },
   {
     field: 'dateCreated',
     headerName: 'Date Created',

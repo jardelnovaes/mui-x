@@ -6,7 +6,6 @@ const deDEGrid: Partial<GridLocaleText> = {
   // Root
   noRowsLabel: 'Keine Einträge',
   noResultsOverlayLabel: 'Keine Ergebnisse gefunden.',
-  errorOverlayDefaultLabel: 'Ein unerwarteter Fehler ist aufgetreten.',
 
   // Density selector toolbar button text
   toolbarDensity: 'Zeilenhöhe',
@@ -28,9 +27,9 @@ const deDEGrid: Partial<GridLocaleText> = {
     count !== 1 ? `${count} aktive Filter` : `${count} aktiver Filter`,
 
   // Quick filter toolbar field
-  // toolbarQuickFilterPlaceholder: 'Search...',
-  // toolbarQuickFilterLabel: 'Search',
-  // toolbarQuickFilterDeleteIconLabel: 'Clear',
+  toolbarQuickFilterPlaceholder: 'Suchen…',
+  toolbarQuickFilterLabel: 'Suchen',
+  toolbarQuickFilterDeleteIconLabel: 'Löschen',
 
   // Export selector toolbar button text
   toolbarExport: 'Exportieren',
@@ -48,11 +47,10 @@ const deDEGrid: Partial<GridLocaleText> = {
 
   // Filter panel text
   filterPanelAddFilter: 'Filter hinzufügen',
+  filterPanelRemoveAll: 'Alle entfernen',
   filterPanelDeleteIconLabel: 'Löschen',
-  filterPanelLinkOperator: 'Logische Operatoren',
-  filterPanelOperators: 'Operatoren',
-
-  // TODO v6: rename to filterPanelOperator
+  filterPanelLogicOperator: 'Logische Operatoren',
+  filterPanelOperator: 'Operatoren',
   filterPanelOperatorAnd: 'Und',
   filterPanelOperatorOr: 'Oder',
   filterPanelColumns: 'Spalten',
@@ -73,6 +71,33 @@ const deDEGrid: Partial<GridLocaleText> = {
   filterOperatorIsEmpty: 'ist leer',
   filterOperatorIsNotEmpty: 'ist nicht leer',
   filterOperatorIsAnyOf: 'ist einer der Werte',
+  'filterOperator=': '=',
+  'filterOperator!=': '!=',
+  'filterOperator>': '>',
+  'filterOperator>=': '>=',
+  'filterOperator<': '<',
+  'filterOperator<=': '<=',
+
+  // Header filter operators text
+  headerFilterOperatorContains: 'Enthält',
+  headerFilterOperatorEquals: 'Gleich',
+  headerFilterOperatorStartsWith: 'Beginnt mit',
+  headerFilterOperatorEndsWith: 'Endet mit',
+  headerFilterOperatorIs: 'Ist',
+  headerFilterOperatorNot: 'Ist nicht',
+  headerFilterOperatorAfter: 'Ist nach',
+  headerFilterOperatorOnOrAfter: 'Ist am oder nach',
+  headerFilterOperatorBefore: 'Ist vor',
+  headerFilterOperatorOnOrBefore: 'Ist am oder vor',
+  headerFilterOperatorIsEmpty: 'Ist leer',
+  headerFilterOperatorIsNotEmpty: 'Ist nicht leer',
+  headerFilterOperatorIsAnyOf: 'Ist eines von',
+  'headerFilterOperator=': 'Gleich',
+  'headerFilterOperator!=': 'Ungleich',
+  'headerFilterOperator>': 'Größer als',
+  'headerFilterOperator>=': 'Größer als oder gleich',
+  'headerFilterOperator<': 'Kleiner als',
+  'headerFilterOperator<=': 'Kleiner als oder gleich',
 
   // Filter values text
   filterValueAny: 'Beliebig',
@@ -82,6 +107,7 @@ const deDEGrid: Partial<GridLocaleText> = {
   // Column menu text
   columnMenuLabel: 'Menü',
   columnMenuShowColumns: 'Zeige alle Spalten',
+  columnMenuManageColumns: 'Spalten verwalten',
   columnMenuFilter: 'Filter',
   columnMenuHideColumn: 'Verbergen',
   columnMenuUnsort: 'Sortierung deaktivieren',
@@ -137,11 +163,20 @@ const deDEGrid: Partial<GridLocaleText> = {
   unGroupColumn: (name) => `Gruppierung nach ${name} aufheben`,
 
   // Master/detail
+  detailPanelToggle: 'Detailansicht Kippschalter',
   expandDetailPanel: 'Aufklappen',
   collapseDetailPanel: 'Zuklappen',
 
   // Row reordering text
   rowReorderingHeaderName: 'Reihen neu ordnen',
+
+  // Aggregation
+  aggregationMenuItemHeader: 'Aggregation',
+  aggregationFunctionLabelSum: 'Summe',
+  aggregationFunctionLabelAvg: 'Mittelwert',
+  aggregationFunctionLabelMin: 'Minimum',
+  aggregationFunctionLabelMax: 'Maximum',
+  aggregationFunctionLabelSize: 'Anzahl',
 };
 
 export const deDE: Localization = getGridLocalization(deDEGrid, deDECore);

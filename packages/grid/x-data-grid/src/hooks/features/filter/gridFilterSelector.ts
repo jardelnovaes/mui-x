@@ -1,14 +1,14 @@
-import { createSelector } from '../../../utils/createSelector';
+import { createSelector, createSelectorMemoized } from '../../../utils/createSelector';
 import { GridFilterItem } from '../../../models/gridFilterItem';
 import { GridStateCommunity } from '../../../models/gridStateCommunity';
 import { gridSortedRowEntriesSelector } from '../sorting/gridSortingSelector';
 import { gridColumnLookupSelector } from '../columns/gridColumnsSelector';
-import { gridRowTreeDepthSelector, gridRowTreeSelector } from '../rows/gridRowsSelector';
+import { gridRowMaximumTreeDepthSelector, gridRowTreeSelector } from '../rows/gridRowsSelector';
 
 /**
  * @category Filtering
  */
-export const gridFilterStateSelector = (state: GridStateCommunity) => state.filter;
+const gridFilterStateSelector = (state: GridStateCommunity) => state.filter;
 
 /**
  * Get the current filter model.
@@ -29,13 +29,10 @@ export const gridQuickFilterValuesSelector = createSelector(
 );
 
 /**
- * @category Filtering
+ * @category Visible rows
  * @ignore - do not document.
  */
-export const gridVisibleRowsLookupSelector = createSelector(
-  gridFilterStateSelector,
-  (filterState) => filterState.visibleRowsLookup,
-);
+export const gridVisibleRowsLookupSelector = (state: GridStateCommunity) => state.visibleRowsLookup;
 
 /**
  * @category Filtering
@@ -60,7 +57,7 @@ export const gridFilteredDescendantCountLookupSelector = createSelector(
  * Does not contain the collapsed children.
  * @category Filtering
  */
-export const gridVisibleSortedRowEntriesSelector = createSelector(
+export const gridExpandedSortedRowEntriesSelector = createSelectorMemoized(
   gridVisibleRowsLookupSelector,
   gridSortedRowEntriesSelector,
   (visibleRowsLookup, sortedRows) =>
@@ -72,8 +69,8 @@ export const gridVisibleSortedRowEntriesSelector = createSelector(
  * Does not contain the collapsed children.
  * @category Filtering
  */
-export const gridVisibleSortedRowIdsSelector = createSelector(
-  gridVisibleSortedRowEntriesSelector,
+export const gridExpandedSortedRowIdsSelector = createSelectorMemoized(
+  gridExpandedSortedRowEntriesSelector,
   (visibleSortedRowEntries) => visibleSortedRowEntries.map((row) => row.id),
 );
 
@@ -82,7 +79,7 @@ export const gridVisibleSortedRowIdsSelector = createSelector(
  * Contains the collapsed children.
  * @category Filtering
  */
-export const gridFilteredSortedRowEntriesSelector = createSelector(
+export const gridFilteredSortedRowEntriesSelector = createSelectorMemoized(
   gridFilteredRowsLookupSelector,
   gridSortedRowEntriesSelector,
   (filteredRowsLookup, sortedRows) =>
@@ -94,27 +91,19 @@ export const gridFilteredSortedRowEntriesSelector = createSelector(
  * Contains the collapsed children.
  * @category Filtering
  */
-export const gridFilteredSortedRowIdsSelector = createSelector(
+export const gridFilteredSortedRowIdsSelector = createSelectorMemoized(
   gridFilteredSortedRowEntriesSelector,
   (filteredSortedRowEntries) => filteredSortedRowEntries.map((row) => row.id),
 );
 
 /**
- * @category Filtering
- * @deprecated Use `gridVisibleSortedRowIdsSelector` instead
- * @ignore - do not document.
- * TODO: Add deprecation warning once we have the new selectors without the "visible" keyword.
- */
-export const gridVisibleRowsSelector = gridVisibleSortedRowIdsSelector;
-
-/**
  * Get the id and the model of the top level rows accessible after the filtering process.
  * @category Filtering
  */
-export const gridVisibleSortedTopLevelRowEntriesSelector = createSelector(
-  gridVisibleSortedRowEntriesSelector,
+export const gridFilteredSortedTopLevelRowEntriesSelector = createSelectorMemoized(
+  gridExpandedSortedRowEntriesSelector,
   gridRowTreeSelector,
-  gridRowTreeDepthSelector,
+  gridRowMaximumTreeDepthSelector,
   (visibleSortedRows, rowTree, rowTreeDepth) => {
     if (rowTreeDepth < 2) {
       return visibleSortedRows;
@@ -128,8 +117,8 @@ export const gridVisibleSortedTopLevelRowEntriesSelector = createSelector(
  * Get the amount of rows accessible after the filtering process.
  * @category Filtering
  */
-export const gridVisibleRowCountSelector = createSelector(
-  gridVisibleSortedRowEntriesSelector,
+export const gridExpandedRowCountSelector = createSelector(
+  gridExpandedSortedRowEntriesSelector,
   (visibleSortedRows) => visibleSortedRows.length,
 );
 
@@ -137,8 +126,8 @@ export const gridVisibleRowCountSelector = createSelector(
  * Get the amount of top level rows accessible after the filtering process.
  * @category Filtering
  */
-export const gridVisibleTopLevelRowCountSelector = createSelector(
-  gridVisibleSortedTopLevelRowEntriesSelector,
+export const gridFilteredTopLevelRowCountSelector = createSelector(
+  gridFilteredSortedTopLevelRowEntriesSelector,
   (visibleSortedTopLevelRows) => visibleSortedTopLevelRows.length,
 );
 
@@ -146,20 +135,20 @@ export const gridVisibleTopLevelRowCountSelector = createSelector(
  * @category Filtering
  * @ignore - do not document.
  */
-export const gridFilterActiveItemsSelector = createSelector(
+export const gridFilterActiveItemsSelector = createSelectorMemoized(
   gridFilterModelSelector,
   gridColumnLookupSelector,
   (filterModel, columnLookup) =>
     filterModel.items?.filter((item) => {
-      if (!item.columnField) {
+      if (!item.field) {
         return false;
       }
-      const column = columnLookup[item.columnField];
+      const column = columnLookup[item.field];
       if (!column?.filterOperators || column?.filterOperators?.length === 0) {
         return false;
       }
       const filterOperator = column.filterOperators.find(
-        (operator) => operator.value === item.operatorValue,
+        (operator) => operator.value === item.operator,
       );
       if (!filterOperator) {
         return false;
@@ -170,21 +159,21 @@ export const gridFilterActiveItemsSelector = createSelector(
     }),
 );
 
-export type GridFilterActiveItemsLookup = { [columnField: string]: GridFilterItem[] };
+export type GridFilterActiveItemsLookup = { [field: string]: GridFilterItem[] };
 
 /**
  * @category Filtering
  * @ignore - do not document.
  */
-export const gridFilterActiveItemsLookupSelector = createSelector(
+export const gridFilterActiveItemsLookupSelector = createSelectorMemoized(
   gridFilterActiveItemsSelector,
   (activeFilters) => {
     const result: GridFilterActiveItemsLookup = activeFilters.reduce<GridFilterActiveItemsLookup>(
       (res, filterItem) => {
-        if (!res[filterItem.columnField!]) {
-          res[filterItem.columnField!] = [filterItem];
+        if (!res[filterItem.field!]) {
+          res[filterItem.field!] = [filterItem];
         } else {
-          res[filterItem.columnField!].push(filterItem);
+          res[filterItem.field!].push(filterItem);
         }
         return res;
       },

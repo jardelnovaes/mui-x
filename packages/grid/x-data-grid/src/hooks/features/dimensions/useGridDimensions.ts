@@ -1,12 +1,13 @@
 import * as React from 'react';
 import {
-  debounce,
-  ownerDocument,
+  unstable_debounce as debounce,
+  unstable_ownerDocument as ownerDocument,
   unstable_useEnhancedEffect as useEnhancedEffect,
-} from '@mui/material/utils';
+  unstable_ownerWindow as ownerWindow,
+} from '@mui/utils';
 import { GridEventListener } from '../../../models/events';
 import { ElementSize } from '../../../models';
-import { GridApiCommunity } from '../../../models/api/gridApiCommunity';
+import { GridPrivateApiCommunity } from '../../../models/api/gridApiCommunity';
 import {
   useGridApiEventHandler,
   useGridApiOptionHandler,
@@ -14,12 +15,14 @@ import {
 import { useGridApiMethod } from '../../utils/useGridApiMethod';
 import { useGridLogger } from '../../utils/useGridLogger';
 import { DataGridProcessedProps } from '../../../models/props/DataGridProps';
-import { GridDimensions, GridDimensionsApi } from './gridDimensionsApi';
+import { GridDimensions, GridDimensionsApi, GridDimensionsPrivateApi } from './gridDimensionsApi';
 import { gridColumnsTotalWidthSelector } from '../columns';
-import { gridDensityHeaderHeightSelector, gridDensityRowHeightSelector } from '../density';
+import { gridDensityFactorSelector } from '../density';
 import { useGridSelector } from '../../utils';
 import { getVisibleRows } from '../../utils/useGridVisibleRows';
 import { gridRowsMetaSelector } from '../rows/gridRowsMetaSelector';
+import { calculatePinnedRowsHeight } from '../rows/gridRowsUtils';
+import { getTotalHeaderHeight } from '../columns/gridColumnsUtils';
 
 const isTestEnvironment = process.env.NODE_ENV === 'test';
 
@@ -51,22 +54,32 @@ const hasScroll = ({
 };
 
 export function useGridDimensions(
-  apiRef: React.MutableRefObject<GridApiCommunity>,
+  apiRef: React.MutableRefObject<GridPrivateApiCommunity>,
   props: Pick<
     DataGridProcessedProps,
-    'onResize' | 'scrollbarSize' | 'pagination' | 'paginationMode' | 'autoHeight' | 'getRowHeight'
+    | 'onResize'
+    | 'scrollbarSize'
+    | 'pagination'
+    | 'paginationMode'
+    | 'autoHeight'
+    | 'getRowHeight'
+    | 'rowHeight'
+    | 'columnHeaderHeight'
   >,
 ) {
   const logger = useGridLogger(apiRef, 'useResizeContainer');
-  const warningShown = React.useRef(false);
+  const errorShown = React.useRef(false);
   const rootDimensionsRef = React.useRef<ElementSize | null>(null);
   const fullDimensionsRef = React.useRef<GridDimensions | null>(null);
   const rowsMeta = useGridSelector(apiRef, gridRowsMetaSelector);
-  const headerHeight = useGridSelector(apiRef, gridDensityHeaderHeightSelector);
+  const densityFactor = useGridSelector(apiRef, gridDensityFactorSelector);
+  const rowHeight = Math.floor(props.rowHeight * densityFactor);
+  const totalHeaderHeight = getTotalHeaderHeight(apiRef, props.columnHeaderHeight);
 
   const updateGridDimensionsRef = React.useCallback(() => {
     const rootElement = apiRef.current.rootElementRef?.current;
     const columnsTotalWidth = gridColumnsTotalWidthSelector(apiRef);
+    const pinnedRowsHeight = calculatePinnedRowsHeight(apiRef);
 
     if (!rootDimensionsRef.current) {
       return;
@@ -90,18 +103,36 @@ export function useGridDimensions(
       rootElement.removeChild(scrollDiv);
     }
 
-    const viewportOuterSize: ElementSize = {
-      width: rootDimensionsRef.current.width,
-      height: props.autoHeight
-        ? rowsMeta.currentPageTotalHeight
-        : rootDimensionsRef.current.height - headerHeight,
-    };
+    let viewportOuterSize: ElementSize;
+    let hasScrollX: boolean;
+    let hasScrollY: boolean;
 
-    const { hasScrollX, hasScrollY } = hasScroll({
-      content: { width: Math.round(columnsTotalWidth), height: rowsMeta.currentPageTotalHeight },
-      container: viewportOuterSize,
-      scrollBarSize,
-    });
+    if (props.autoHeight) {
+      hasScrollY = false;
+      hasScrollX = Math.round(columnsTotalWidth) > Math.round(rootDimensionsRef.current.width);
+
+      viewportOuterSize = {
+        width: rootDimensionsRef.current.width,
+        height: rowsMeta.currentPageTotalHeight + (hasScrollX ? scrollBarSize : 0),
+      };
+    } else {
+      viewportOuterSize = {
+        width: rootDimensionsRef.current.width,
+        height: Math.max(rootDimensionsRef.current.height - totalHeaderHeight, 0),
+      };
+
+      const scrollInformation = hasScroll({
+        content: { width: Math.round(columnsTotalWidth), height: rowsMeta.currentPageTotalHeight },
+        container: {
+          width: Math.round(viewportOuterSize.width),
+          height: viewportOuterSize.height - pinnedRowsHeight.top - pinnedRowsHeight.bottom,
+        },
+        scrollBarSize,
+      });
+
+      hasScrollY = scrollInformation.hasScrollY;
+      hasScrollX = scrollInformation.hasScrollX;
+    }
 
     const viewportInnerSize: ElementSize = {
       width: viewportOuterSize.width - (hasScrollY ? scrollBarSize : 0),
@@ -113,6 +144,7 @@ export function useGridDimensions(
       viewportInnerSize,
       hasScrollX,
       hasScrollY,
+      scrollBarSize,
     };
 
     const prevDimensions = fullDimensionsRef.current;
@@ -128,14 +160,25 @@ export function useGridDimensions(
     apiRef,
     props.scrollbarSize,
     props.autoHeight,
-    headerHeight,
     rowsMeta.currentPageTotalHeight,
+    totalHeaderHeight,
   ]);
 
+  const [savedSize, setSavedSize] = React.useState<ElementSize>();
+  const debouncedSetSavedSize = React.useMemo(() => debounce(setSavedSize, 60), []);
+  const previousSize = React.useRef<ElementSize>();
+
+  useEnhancedEffect(() => {
+    if (savedSize) {
+      updateGridDimensionsRef();
+      apiRef.current.publishEvent('debouncedResize', rootDimensionsRef.current!);
+    }
+  }, [apiRef, savedSize, updateGridDimensionsRef]);
+
+  // This is the function called by apiRef.current.resize()
   const resize = React.useCallback<GridDimensionsApi['resize']>(() => {
-    updateGridDimensionsRef();
-    apiRef.current.publishEvent('debouncedResize', rootDimensionsRef.current!);
-  }, [apiRef, updateGridDimensionsRef]);
+    apiRef.current.computeSizeAndPublishResizeEvent();
+  }, [apiRef]);
 
   const getRootDimensions = React.useCallback<GridDimensionsApi['getRootDimensions']>(
     () => fullDimensionsRef.current,
@@ -157,29 +200,55 @@ export function useGridDimensions(
     // TODO: Use a combination of scrollTop, dimensions.viewportInnerSize.height and rowsMeta.possitions
     // to find out the maximum number of rows that can fit in the visible part of the grid
     if (props.getRowHeight) {
-      const renderContext = apiRef.current.unstable_getRenderContext();
+      const renderContext = apiRef.current.getRenderContext();
       const viewportPageSize = renderContext.lastRowIndex - renderContext.firstRowIndex;
 
       return Math.min(viewportPageSize - 1, currentPage.rows.length);
     }
 
     const maximumPageSizeWithoutScrollBar = Math.floor(
-      dimensions.viewportInnerSize.height / gridDensityRowHeightSelector(apiRef),
+      dimensions.viewportInnerSize.height / rowHeight,
     );
 
     return Math.min(maximumPageSizeWithoutScrollBar, currentPage.rows.length);
-  }, [apiRef, props.pagination, props.paginationMode, props.getRowHeight]);
+  }, [apiRef, props.pagination, props.paginationMode, props.getRowHeight, rowHeight]);
+
+  const computeSizeAndPublishResizeEvent = React.useCallback(() => {
+    const mainEl = apiRef.current.mainElementRef?.current;
+
+    if (!mainEl) {
+      return;
+    }
+
+    const win = ownerWindow(mainEl);
+    const computedStyle = win.getComputedStyle(mainEl);
+
+    const height = parseFloat(computedStyle.height) || 0;
+    const width = parseFloat(computedStyle.width) || 0;
+
+    const hasHeightChanged = height !== previousSize.current?.height;
+    const hasWidthChanged = width !== previousSize.current?.width;
+
+    if (!previousSize.current || hasHeightChanged || hasWidthChanged) {
+      const size = { width, height };
+      apiRef.current.publishEvent('resize', size);
+      previousSize.current = size;
+    }
+  }, [apiRef]);
 
   const dimensionsApi: GridDimensionsApi = {
     resize,
     getRootDimensions,
-    unstable_getViewportPageSize: getViewportPageSize,
-    unstable_updateGridDimensionsRef: updateGridDimensionsRef,
   };
 
-  useGridApiMethod(apiRef, dimensionsApi, 'GridDimensionsApi');
+  const dimensionsPrivateApi: GridDimensionsPrivateApi = {
+    getViewportPageSize,
+    updateGridDimensionsRef,
+    computeSizeAndPublishResizeEvent,
+  };
 
-  const debounceResize = React.useMemo(() => debounce(resize, 60), [resize]);
+  useGridApiMethod(apiRef, dimensionsApi, 'public');
+  useGridApiMethod(apiRef, dimensionsPrivateApi, 'private');
 
   const isFirstSizing = React.useRef(true);
 
@@ -190,57 +259,54 @@ export function useGridDimensions(
       // jsdom has no layout capabilities
       const isJSDOM = /jsdom/.test(window.navigator.userAgent);
 
-      if (size.height === 0 && !warningShown.current && !props.autoHeight && !isJSDOM) {
-        logger.warn(
+      if (size.height === 0 && !errorShown.current && !props.autoHeight && !isJSDOM) {
+        logger.error(
           [
-            'The parent of the grid has an empty height.',
-            'You need to make sure the container has an intrinsic height.',
+            'The parent DOM element of the data grid has an empty height.',
+            'Please make sure that this element has an intrinsic height.',
             'The grid displays with a height of 0px.',
             '',
-            'You can find a solution in the docs:',
-            'https://mui.com/x/react-data-grid/layout/',
+            'More details: https://mui.com/r/x-data-grid-no-dimensions.',
           ].join('\n'),
         );
-        warningShown.current = true;
+        errorShown.current = true;
       }
-      if (size.width === 0 && !warningShown.current && !isJSDOM) {
-        logger.warn(
+      if (size.width === 0 && !errorShown.current && !isJSDOM) {
+        logger.error(
           [
-            'The parent of the grid has an empty width.',
-            'You need to make sure the container has an intrinsic width.',
+            'The parent DOM element of the data grid has an empty width.',
+            'Please make sure that this element has an intrinsic width.',
             'The grid displays with a width of 0px.',
             '',
-            'You can find a solution in the docs:',
-            'https://mui.com/x/react-data-grid/layout/',
+            'More details: https://mui.com/r/x-data-grid-no-dimensions.',
           ].join('\n'),
         );
-        warningShown.current = true;
+        errorShown.current = true;
       }
 
       if (isTestEnvironment) {
         // We don't need to debounce the resize for tests.
-        resize();
+        setSavedSize(size);
         isFirstSizing.current = false;
         return;
       }
 
       if (isFirstSizing.current) {
         // We want to initialize the grid dimensions as soon as possible to avoid flickering
-        resize();
+        setSavedSize(size);
         isFirstSizing.current = false;
         return;
       }
 
-      debounceResize();
+      debouncedSetSavedSize(size);
     },
-    [props.autoHeight, debounceResize, logger, resize],
+    [props.autoHeight, debouncedSetSavedSize, logger],
   );
 
   useEnhancedEffect(() => updateGridDimensionsRef(), [updateGridDimensionsRef]);
 
   useGridApiOptionHandler(apiRef, 'sortedRowsSet', updateGridDimensionsRef);
-  useGridApiOptionHandler(apiRef, 'pageChange', updateGridDimensionsRef);
-  useGridApiOptionHandler(apiRef, 'pageSizeChange', updateGridDimensionsRef);
+  useGridApiOptionHandler(apiRef, 'paginationModelChange', updateGridDimensionsRef);
   useGridApiOptionHandler(apiRef, 'columnsChange', updateGridDimensionsRef);
   useGridApiEventHandler(apiRef, 'resize', handleResize);
   useGridApiOptionHandler(apiRef, 'debouncedResize', props.onResize);

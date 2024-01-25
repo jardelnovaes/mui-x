@@ -1,4 +1,4 @@
-import { createSelector } from '../../../utils/createSelector';
+import { createSelector, createSelectorMemoized } from '../../../utils/createSelector';
 import { GridSortDirection, GridSortModel } from '../../../models/gridSortModel';
 import { GridStateCommunity } from '../../../models/gridStateCommunity';
 import { gridRowsLookupSelector } from '../rows/gridRowsSelector';
@@ -7,7 +7,7 @@ import { gridRowsLookupSelector } from '../rows/gridRowsSelector';
  * @category Sorting
  * @ignore - do not document.
  */
-export const gridSortingStateSelector = (state: GridStateCommunity) => state.sorting;
+const gridSortingStateSelector = (state: GridStateCommunity) => state.sorting;
 
 /**
  * Get the id of the rows after the sorting process.
@@ -22,10 +22,11 @@ export const gridSortedRowIdsSelector = createSelector(
  * Get the id and the model of the rows after the sorting process.
  * @category Sorting
  */
-export const gridSortedRowEntriesSelector = createSelector(
+export const gridSortedRowEntriesSelector = createSelectorMemoized(
   gridSortedRowIdsSelector,
   gridRowsLookupSelector,
-  (sortedIds, idRowsLookup) => sortedIds.map((id) => ({ id, model: idRowsLookup[id] })),
+  // TODO rows v6: Is this the best approach ?
+  (sortedIds, idRowsLookup) => sortedIds.map((id) => ({ id, model: idRowsLookup[id] ?? {} })),
 );
 
 /**
@@ -46,7 +47,7 @@ export type GridSortColumnLookup = Record<
  * @category Sorting
  * @ignore - do not document.
  */
-export const gridSortColumnLookupSelector = createSelector(
+export const gridSortColumnLookupSelector = createSelectorMemoized(
   gridSortModelSelector,
   (sortModel: GridSortModel) => {
     const result = sortModel.reduce<GridSortColumnLookup>((res, sortItem, index) => {

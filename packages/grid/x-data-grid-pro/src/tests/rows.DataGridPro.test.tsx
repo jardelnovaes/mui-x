@@ -1,6 +1,5 @@
 import * as React from 'react';
-// @ts-ignore Remove once the test utils are typed
-import { createRenderer, fireEvent } from '@mui/monorepo/test/utils';
+import { createRenderer, fireEvent, act, userEvent } from '@mui-internal/test-utils';
 import { spy } from 'sinon';
 import { expect } from 'chai';
 import {
@@ -17,9 +16,9 @@ import {
   DataGridProProps,
   GridApi,
   gridFocusCellSelector,
+  gridClasses,
 } from '@mui/x-data-grid-pro';
-import { useData } from 'packages/storybook/src/hooks/useData';
-import { getData } from 'storybook/src/data/data-service';
+import { useBasicDemoData, getBasicGridData } from '@mui/x-data-grid-generator';
 
 const isJSDOM = /jsdom/.test(window.navigator.userAgent);
 
@@ -64,50 +63,28 @@ describe('<DataGridPro /> - Rows', () => {
       );
     });
 
-    describe('updateRows', () => {
-      it('should apply getRowId before updating rows', () => {
-        const getRowId: DataGridProProps['getRowId'] = (row) => `${row.clientId}`;
-        let apiRef: React.MutableRefObject<GridApi>;
-        const Test = () => {
-          apiRef = useGridApiRef();
-          return (
-            <div style={{ width: 300, height: 300 }}>
-              <DataGridPro {...baselineProps} getRowId={getRowId} apiRef={apiRef} />
-            </div>
-          );
-        };
-        render(<Test />);
-        expect(getColumnValues(0)).to.deep.equal(['c1', 'c2', 'c3']);
-        apiRef!.current.updateRows([
-          { clientId: 'c2', age: 30 },
-          { clientId: 'c3', age: 31 },
-        ]);
-        expect(getColumnValues(2)).to.deep.equal(['11', '30', '31']);
-      });
-    });
-
     it('should allow to switch between cell mode', () => {
       let apiRef: React.MutableRefObject<GridApi>;
       const editableProps = { ...baselineProps };
       editableProps.columns = editableProps.columns.map((col) => ({ ...col, editable: true }));
       const getRowId: DataGridProProps['getRowId'] = (row) => `${row.clientId}`;
 
-      const Test = () => {
+      function Test() {
         apiRef = useGridApiRef();
         return (
           <div style={{ width: 300, height: 300 }}>
             <DataGridPro {...editableProps} apiRef={apiRef} getRowId={getRowId} />
           </div>
         );
-      };
+      }
       render(<Test />);
-      apiRef!.current.setCellMode('c2', 'first', 'edit');
+      act(() => apiRef!.current.startCellEditMode({ id: 'c2', field: 'first' }));
       const cell = getCell(1, 1);
 
       expect(cell).to.have.class('MuiDataGrid-cell--editable');
       expect(cell).to.have.class('MuiDataGrid-cell--editing');
       expect(cell.querySelector('input')!.value).to.equal('Jack');
-      apiRef!.current.setCellMode('c2', 'first', 'view');
+      act(() => apiRef!.current.stopCellEditMode({ id: 'c2', field: 'first' }));
 
       expect(cell).to.have.class('MuiDataGrid-cell--editable');
       expect(cell).not.to.have.class('MuiDataGrid-cell--editing');
@@ -117,14 +94,14 @@ describe('<DataGridPro /> - Rows', () => {
     it('should not clone the row', () => {
       const getRowId: DataGridProProps['getRowId'] = (row) => `${row.clientId}`;
       let apiRef: React.MutableRefObject<GridApi>;
-      const Test = () => {
+      function Test() {
         apiRef = useGridApiRef();
         return (
           <div style={{ width: 300, height: 300 }}>
             <DataGridPro {...baselineProps} getRowId={getRowId} apiRef={apiRef} />
           </div>
         );
-      };
+      }
       render(<Test />);
       expect(apiRef!.current.getRow('c1')).to.equal(baselineProps.rows[0]);
     });
@@ -132,19 +109,21 @@ describe('<DataGridPro /> - Rows', () => {
 
   describe('prop: rows', () => {
     it('should not throttle even when props.throttleRowsMs is defined', () => {
-      const { rows, columns } = getData(5, 2);
+      const { rows, columns } = getBasicGridData(5, 2);
 
-      const Test = (props: Pick<DataGridProProps, 'rows'>) => (
-        <div style={{ width: 300, height: 300 }}>
-          <DataGridPro
-            {...props}
-            columns={columns}
-            autoHeight={isJSDOM}
-            throttleRowsMs={100}
-            disableVirtualization
-          />
-        </div>
-      );
+      function Test(props: Pick<DataGridProProps, 'rows'>) {
+        return (
+          <div style={{ width: 300, height: 300 }}>
+            <DataGridPro
+              {...props}
+              columns={columns}
+              autoHeight={isJSDOM}
+              throttleRowsMs={100}
+              disableVirtualization
+            />
+          </div>
+        );
+      }
 
       const { setProps } = render(<Test rows={rows.slice(0, 2)} />);
 
@@ -178,26 +157,26 @@ describe('<DataGridPro /> - Rows', () => {
 
     let apiRef: React.MutableRefObject<GridApi>;
 
-    const TestCase = (props: Partial<DataGridProProps>) => {
+    function TestCase(props: Partial<DataGridProProps>) {
       apiRef = useGridApiRef();
       return (
         <div style={{ width: 300, height: 300 }}>
           <DataGridPro {...baselineProps} apiRef={apiRef} {...props} disableVirtualization />
         </div>
       );
-    };
+    }
 
     it('should not throttle by default', () => {
       render(<TestCase />);
       expect(getColumnValues(0)).to.deep.equal(['Nike', 'Adidas', 'Puma']);
-      apiRef.current.updateRows([{ id: 1, brand: 'Fila' }]);
+      act(() => apiRef.current.updateRows([{ id: 1, brand: 'Fila' }]));
       expect(getColumnValues(0)).to.deep.equal(['Nike', 'Fila', 'Puma']);
     });
 
     it('should allow to enable throttle', () => {
       render(<TestCase throttleRowsMs={100} />);
       expect(getColumnValues(0)).to.deep.equal(['Nike', 'Adidas', 'Puma']);
-      apiRef.current.updateRows([{ id: 1, brand: 'Fila' }]);
+      act(() => apiRef.current.updateRows([{ id: 1, brand: 'Fila' }]));
       clock.tick(50);
       expect(getColumnValues(0)).to.deep.equal(['Nike', 'Adidas', 'Puma']);
       clock.tick(50);
@@ -206,54 +185,58 @@ describe('<DataGridPro /> - Rows', () => {
 
     it('should allow to update row data', () => {
       render(<TestCase />);
-      apiRef.current.updateRows([{ id: 1, brand: 'Fila' }]);
-      apiRef.current.updateRows([{ id: 0, brand: 'Pata' }]);
-      apiRef.current.updateRows([{ id: 2, brand: 'Pum' }]);
+      act(() => apiRef.current.updateRows([{ id: 1, brand: 'Fila' }]));
+      act(() => apiRef.current.updateRows([{ id: 0, brand: 'Pata' }]));
+      act(() => apiRef.current.updateRows([{ id: 2, brand: 'Pum' }]));
       expect(getColumnValues(0)).to.deep.equal(['Pata', 'Fila', 'Pum']);
     });
 
     it('update row data can also add rows', () => {
       render(<TestCase />);
-      apiRef.current.updateRows([{ id: 1, brand: 'Fila' }]);
-      apiRef.current.updateRows([{ id: 0, brand: 'Pata' }]);
-      apiRef.current.updateRows([{ id: 2, brand: 'Pum' }]);
-      apiRef.current.updateRows([{ id: 3, brand: 'Jordan' }]);
+      act(() => apiRef.current.updateRows([{ id: 1, brand: 'Fila' }]));
+      act(() => apiRef.current.updateRows([{ id: 0, brand: 'Pata' }]));
+      act(() => apiRef.current.updateRows([{ id: 2, brand: 'Pum' }]));
+      act(() => apiRef.current.updateRows([{ id: 3, brand: 'Jordan' }]));
       expect(getColumnValues(0)).to.deep.equal(['Pata', 'Fila', 'Pum', 'Jordan']);
     });
 
     it('update row data can also add rows in bulk', () => {
       render(<TestCase />);
-      apiRef.current.updateRows([
-        { id: 1, brand: 'Fila' },
-        { id: 0, brand: 'Pata' },
-        { id: 2, brand: 'Pum' },
-        { id: 3, brand: 'Jordan' },
-      ]);
+      act(() =>
+        apiRef.current.updateRows([
+          { id: 1, brand: 'Fila' },
+          { id: 0, brand: 'Pata' },
+          { id: 2, brand: 'Pum' },
+          { id: 3, brand: 'Jordan' },
+        ]),
+      );
       expect(getColumnValues(0)).to.deep.equal(['Pata', 'Fila', 'Pum', 'Jordan']);
     });
 
     it('update row data can also delete rows', () => {
       render(<TestCase />);
-      apiRef.current.updateRows([{ id: 1, _action: 'delete' }]);
-      apiRef.current.updateRows([{ id: 0, brand: 'Apple' }]);
-      apiRef.current.updateRows([{ id: 2, _action: 'delete' }]);
-      apiRef.current.updateRows([{ id: 5, brand: 'Atari' }]);
+      act(() => apiRef.current.updateRows([{ id: 1, _action: 'delete' }]));
+      act(() => apiRef.current.updateRows([{ id: 0, brand: 'Apple' }]));
+      act(() => apiRef.current.updateRows([{ id: 2, _action: 'delete' }]));
+      act(() => apiRef.current.updateRows([{ id: 5, brand: 'Atari' }]));
       expect(getColumnValues(0)).to.deep.equal(['Apple', 'Atari']);
     });
 
     it('update row data can also delete rows in bulk', () => {
       render(<TestCase />);
-      apiRef.current.updateRows([
-        { id: 1, _action: 'delete' },
-        { id: 0, brand: 'Apple' },
-        { id: 2, _action: 'delete' },
-        { id: 5, brand: 'Atari' },
-      ]);
+      act(() =>
+        apiRef.current.updateRows([
+          { id: 1, _action: 'delete' },
+          { id: 0, brand: 'Apple' },
+          { id: 2, _action: 'delete' },
+          { id: 5, brand: 'Atari' },
+        ]),
+      );
       expect(getColumnValues(0)).to.deep.equal(['Apple', 'Atari']);
     });
 
     it('update row data should process getRowId', () => {
-      const TestCaseGetRowId = () => {
+      function TestCaseGetRowId() {
         apiRef = useGridApiRef();
         const getRowId = React.useCallback((row: GridRowModel) => row.idField, []);
         return (
@@ -266,17 +249,63 @@ describe('<DataGridPro /> - Rows', () => {
             />
           </div>
         );
-      };
+      }
 
       render(<TestCaseGetRowId />);
       expect(getColumnValues(0)).to.deep.equal(['Nike', 'Adidas', 'Puma']);
-      apiRef.current.updateRows([
-        { idField: 1, _action: 'delete' },
-        { idField: 0, brand: 'Apple' },
-        { idField: 2, _action: 'delete' },
-        { idField: 5, brand: 'Atari' },
-      ]);
+      act(() =>
+        apiRef.current.updateRows([
+          { idField: 1, _action: 'delete' },
+          { idField: 0, brand: 'Apple' },
+          { idField: 2, _action: 'delete' },
+          { idField: 5, brand: 'Atari' },
+        ]),
+      );
       expect(getColumnValues(0)).to.deep.equal(['Apple', 'Atari']);
+    });
+
+    it('should not loose partial updates after a props.loading switch', () => {
+      function Test(props: Partial<DataGridProProps>) {
+        apiRef = useGridApiRef();
+        return (
+          <div style={{ width: 300, height: 300 }}>
+            <DataGridPro {...baselineProps} apiRef={apiRef} {...props} />
+          </div>
+        );
+      }
+
+      const { setProps } = render(<Test />);
+      expect(getColumnValues(0)).to.deep.equal(['Nike', 'Adidas', 'Puma']);
+
+      setProps({ loading: true });
+      act(() => apiRef.current.updateRows([{ id: 0, brand: 'Nike 2' }]));
+      setProps({ loading: false });
+      expect(getColumnValues(0)).to.deep.equal(['Nike 2', 'Adidas', 'Puma']);
+    });
+
+    it('should not trigger unnecessary cells rerenders', () => {
+      const renderCellSpy = spy((params: any) => {
+        return params.value;
+      });
+      function Test() {
+        apiRef = useGridApiRef();
+        return (
+          <div style={{ width: 300, height: 300 }}>
+            <DataGridPro
+              rows={[{ id: 1, name: 'John' }]}
+              columns={[{ field: 'name', renderCell: renderCellSpy }]}
+              apiRef={apiRef}
+            />
+          </div>
+        );
+      }
+
+      render(<Test />);
+      const initialRendersCount = 2;
+      expect(renderCellSpy.callCount).to.equal(initialRendersCount);
+
+      act(() => apiRef.current.updateRows([{ id: 1, name: 'John' }]));
+      expect(renderCellSpy.callCount).to.equal(initialRendersCount + 2);
     });
   });
 
@@ -304,14 +333,14 @@ describe('<DataGridPro /> - Rows', () => {
 
     let apiRef: React.MutableRefObject<GridApi>;
 
-    const TestCase = (props: Partial<DataGridProProps>) => {
+    function TestCase(props: Partial<DataGridProProps>) {
       apiRef = useGridApiRef();
       return (
         <div style={{ width: 300, height: 300 }}>
           <DataGridPro {...baselineProps} apiRef={apiRef} {...props} />
         </div>
       );
-    };
+    }
 
     it('should not throttle by default', () => {
       render(<TestCase />);
@@ -322,7 +351,7 @@ describe('<DataGridPro /> - Rows', () => {
           brand: 'Asics',
         },
       ];
-      apiRef.current.setRows(newRows);
+      act(() => apiRef.current.setRows(newRows));
 
       expect(getColumnValues(0)).to.deep.equal(['Asics']);
     });
@@ -336,11 +365,23 @@ describe('<DataGridPro /> - Rows', () => {
           brand: 'Asics',
         },
       ];
-      apiRef.current.setRows(newRows);
+      act(() => apiRef.current.setRows(newRows));
 
       clock.tick(50);
       expect(getColumnValues(0)).to.deep.equal(['Nike', 'Adidas', 'Puma']);
       clock.tick(50);
+      expect(getColumnValues(0)).to.deep.equal(['Asics']);
+    });
+
+    it('should work with `loading` prop change', () => {
+      const { setProps } = render(<TestCase />);
+      expect(getColumnValues(0)).to.deep.equal(['Nike', 'Adidas', 'Puma']);
+
+      const newRows = [{ id: 3, brand: 'Asics' }];
+      setProps({ loading: true });
+      act(() => apiRef.current.setRows(newRows));
+      setProps({ loading: false });
+
       expect(getColumnValues(0)).to.deep.equal(['Asics']);
     });
   });
@@ -354,23 +395,36 @@ describe('<DataGridPro /> - Rows', () => {
     });
 
     let apiRef: React.MutableRefObject<GridApi>;
-    const TestCaseVirtualization = (
+    function TestCaseVirtualization(
       props: Partial<DataGridProProps> & {
         nbRows?: number;
         nbCols?: number;
         width?: number;
         height?: number;
       },
-    ) => {
+    ) {
       apiRef = useGridApiRef();
-      const data = useData(props.nbRows || 100, props.nbCols || 10);
+      const data = useBasicDemoData(props.nbRows || 100, props.nbCols || 10);
 
       return (
         <div style={{ width: props.width || 300, height: props.height || 300 }}>
           <DataGridPro apiRef={apiRef} columns={data.columns} rows={data.rows} {...props} />
         </div>
       );
-    };
+    }
+
+    it('should compute rows correctly on height change', async () => {
+      const { setProps } = render(
+        <TestCaseVirtualization nbRows={5} nbCols={2} height={160} rowBuffer={0} />,
+      );
+      expect(getRows()).to.have.length(1);
+      setProps({
+        height: 220,
+      });
+      await act(() => Promise.resolve());
+      clock.runToLast();
+      expect(getRows()).to.have.length(3);
+    });
 
     it('should render last row when scrolling to the bottom', () => {
       const rowHeight = 50;
@@ -380,7 +434,7 @@ describe('<DataGridPro /> - Rows', () => {
       render(
         <TestCaseVirtualization
           nbRows={nbRows}
-          headerHeight={0}
+          columnHeaderHeight={0}
           rowHeight={rowHeight}
           rowBuffer={rowBuffer}
           hideFooter
@@ -393,7 +447,7 @@ describe('<DataGridPro /> - Rows', () => {
         '.MuiDataGrid-virtualScrollerRenderZone',
       )!;
       virtualScroller.scrollTop = 10e6; // scroll to the bottom
-      virtualScroller.dispatchEvent(new Event('scroll'));
+      act(() => virtualScroller.dispatchEvent(new Event('scroll')));
 
       const lastCell = document.querySelector('[role="row"]:last-child [role="cell"]:first-child')!;
       expect(lastCell).to.have.text('995');
@@ -409,12 +463,12 @@ describe('<DataGridPro /> - Rows', () => {
 
     it('should have all the rows rendered of the page in the DOM when autoPageSize: true', () => {
       render(<TestCaseVirtualization autoPageSize pagination />);
-      expect(getRows()).to.have.length(apiRef.current.state.pagination.pageSize);
+      expect(getRows()).to.have.length(apiRef.current.state.pagination.paginationModel.pageSize);
     });
 
     it('should have all the rows rendered in the DOM when autoPageSize: true', () => {
       render(<TestCaseVirtualization autoHeight />);
-      expect(getRows()).to.have.length(apiRef.current.state.pagination.pageSize);
+      expect(getRows()).to.have.length(apiRef.current.state.pagination.paginationModel.pageSize);
     });
 
     it('should render extra columns when the columnBuffer prop is present', () => {
@@ -427,7 +481,7 @@ describe('<DataGridPro /> - Rows', () => {
       expect(firstRow.children).to.have.length(Math.floor(width / columnWidth) + columnBuffer);
       const virtualScroller = document.querySelector('.MuiDataGrid-virtualScroller')!;
       virtualScroller.scrollLeft = 301;
-      virtualScroller.dispatchEvent(new Event('scroll'));
+      act(() => virtualScroller.dispatchEvent(new Event('scroll')));
       expect(firstRow.children).to.have.length(
         columnBuffer + Math.floor(width / columnWidth) + columnBuffer,
       );
@@ -444,7 +498,7 @@ describe('<DataGridPro /> - Rows', () => {
       let firstRow = renderingZone.firstChild;
       expect(firstRow).to.have.attr('data-rowindex', '0');
       virtualScroller.scrollTop = rowThreshold * rowHeight;
-      virtualScroller.dispatchEvent(new Event('scroll'));
+      act(() => virtualScroller.dispatchEvent(new Event('scroll')));
       firstRow = renderingZone.firstChild;
       expect(firstRow).to.have.attr('data-rowindex', '3');
     });
@@ -461,7 +515,7 @@ describe('<DataGridPro /> - Rows', () => {
       let firstColumn = firstRow.firstChild!;
       expect(firstColumn).to.have.attr('data-colindex', '0');
       virtualScroller.scrollLeft = columnThreshold * columnWidth;
-      virtualScroller.dispatchEvent(new Event('scroll'));
+      act(() => virtualScroller.dispatchEvent(new Event('scroll')));
       firstRow = renderingZone.querySelector('[role="row"]:first-child')!;
       firstColumn = firstRow.firstChild!;
       expect(firstColumn).to.have.attr('data-colindex', '3');
@@ -475,13 +529,13 @@ describe('<DataGridPro /> - Rows', () => {
           <TestCaseVirtualization
             pagination
             rowHeight={50}
-            pageSize={nbRows}
-            rowsPerPageOptions={[nbRows]}
+            initialState={{ pagination: { paginationModel: { pageSize: nbRows } } }}
+            pageSizeOptions={[nbRows]}
           />,
         );
         const virtualScroller = document.querySelector('.MuiDataGrid-virtualScroller')!;
         virtualScroller.scrollTop = 10e6; // scroll to the bottom
-        virtualScroller.dispatchEvent(new Event('scroll'));
+        act(() => virtualScroller.dispatchEvent(new Event('scroll')));
 
         const lastCell = document.querySelector(
           '[role="row"]:last-child [role="cell"]:first-child',
@@ -494,9 +548,8 @@ describe('<DataGridPro /> - Rows', () => {
         render(
           <TestCaseVirtualization
             pagination
-            pageSize={32}
-            rowsPerPageOptions={[32]}
-            page={3}
+            initialState={{ pagination: { paginationModel: { pageSize: 32, page: 3 } } }}
+            pageSizeOptions={[32]}
             height={500}
           />,
         );
@@ -538,34 +591,34 @@ describe('<DataGridPro /> - Rows', () => {
 
     describe('scrollToIndexes', () => {
       it('should scroll correctly when the given rowIndex is partially visible at the bottom', () => {
-        const headerHeight = 40;
+        const columnHeaderHeight = 40;
         const rowHeight = 50;
         const offset = 10;
         const border = 1;
         render(
           <TestCaseVirtualization
             hideFooter
-            headerHeight={headerHeight}
-            height={headerHeight + 4 * rowHeight + offset + border * 2}
+            columnHeaderHeight={columnHeaderHeight}
+            height={columnHeaderHeight + 4 * rowHeight + offset + border * 2}
             nbCols={2}
             rowHeight={rowHeight}
           />,
         );
         const virtualScroller = document.querySelector('.MuiDataGrid-virtualScroller')!;
-        apiRef.current.scrollToIndexes({ rowIndex: 4, colIndex: 0 });
+        act(() => apiRef.current.scrollToIndexes({ rowIndex: 4, colIndex: 0 }));
         expect(virtualScroller.scrollTop).to.equal(rowHeight - offset);
       });
 
       it('should scroll correctly when the given index is partially visible at the top', () => {
-        const headerHeight = 40;
+        const columnHeaderHeight = 40;
         const rowHeight = 50;
         const offset = 10;
         const border = 1;
         render(
           <TestCaseVirtualization
             hideFooter
-            headerHeight={headerHeight}
-            height={headerHeight + 4 * rowHeight + border + border * 2}
+            columnHeaderHeight={columnHeaderHeight}
+            height={columnHeaderHeight + 4 * rowHeight + border + border * 2}
             nbCols={2}
             rowHeight={rowHeight}
           />,
@@ -573,11 +626,11 @@ describe('<DataGridPro /> - Rows', () => {
         const virtualScroller = document.querySelector('.MuiDataGrid-virtualScroller')!;
         virtualScroller.scrollTop = offset;
         virtualScroller.dispatchEvent(new Event('scroll')); // Simulate browser behavior
-        apiRef.current.scrollToIndexes({ rowIndex: 2, colIndex: 0 });
+        act(() => apiRef.current.scrollToIndexes({ rowIndex: 2, colIndex: 0 }));
         expect(virtualScroller.scrollTop).to.equal(offset);
-        apiRef.current.scrollToIndexes({ rowIndex: 1, colIndex: 0 });
+        act(() => apiRef.current.scrollToIndexes({ rowIndex: 1, colIndex: 0 }));
         expect(virtualScroller.scrollTop).to.equal(offset);
-        apiRef.current.scrollToIndexes({ rowIndex: 0, colIndex: 0 });
+        act(() => apiRef.current.scrollToIndexes({ rowIndex: 0, colIndex: 0 }));
         expect(virtualScroller.scrollTop).to.equal(0);
       });
 
@@ -595,7 +648,7 @@ describe('<DataGridPro /> - Rows', () => {
         render(<TestCaseVirtualization width={width + border * 2} rows={rows} columns={columns} />);
         const virtualScroller = document.querySelector('.MuiDataGrid-virtualScroller')!;
         expect(virtualScroller.scrollLeft).to.equal(0);
-        apiRef.current.scrollToIndexes({ rowIndex: 0, colIndex: 2 });
+        act(() => apiRef.current.scrollToIndexes({ rowIndex: 0, colIndex: 2 }));
         expect(virtualScroller.scrollLeft).to.equal(columnWidth * 3 - width);
       });
 
@@ -613,10 +666,10 @@ describe('<DataGridPro /> - Rows', () => {
         render(<TestCaseVirtualization width={width + border * 2} rows={rows} columns={columns} />);
         const virtualScroller = document.querySelector('.MuiDataGrid-virtualScroller')!;
         expect(virtualScroller.scrollLeft).to.equal(0);
-        apiRef.current.scrollToIndexes({ rowIndex: 0, colIndex: 2 });
+        act(() => apiRef.current.scrollToIndexes({ rowIndex: 0, colIndex: 2 }));
         virtualScroller.dispatchEvent(new Event('scroll')); // Simulate browser behavior
         expect(virtualScroller.scrollLeft).to.equal(columnWidth * 3 - width);
-        apiRef.current.scrollToIndexes({ rowIndex: 0, colIndex: 1 });
+        act(() => apiRef.current.scrollToIndexes({ rowIndex: 0, colIndex: 1 }));
         expect(virtualScroller.scrollLeft).to.equal(columnWidth * 3 - width);
       });
     });
@@ -625,9 +678,9 @@ describe('<DataGridPro /> - Rows', () => {
   describe('no virtualization', () => {
     let apiRef: React.MutableRefObject<GridApi>;
 
-    const TestCase = (props: Partial<DataGridProProps> & { nbRows?: number; nbCols?: number }) => {
+    function TestCase(props: Partial<DataGridProProps> & { nbRows?: number; nbCols?: number }) {
       apiRef = useGridApiRef();
-      const data = useData(props.nbRows || 10, props.nbCols || 10);
+      const data = useBasicDemoData(props.nbRows || 10, props.nbCols || 10);
       return (
         <div style={{ width: 100, height: 300 }}>
           <DataGridPro
@@ -639,7 +692,7 @@ describe('<DataGridPro /> - Rows', () => {
           />
         </div>
       );
-    };
+    }
 
     it('should allow to disable virtualization', () => {
       render(<TestCase />);
@@ -648,9 +701,15 @@ describe('<DataGridPro /> - Rows', () => {
     });
 
     it('should render the correct rows when changing pages', () => {
-      render(<TestCase pageSize={6} rowsPerPageOptions={[6]} pagination />);
+      render(
+        <TestCase
+          initialState={{ pagination: { paginationModel: { pageSize: 6 } } }}
+          pageSizeOptions={[6]}
+          pagination
+        />,
+      );
       expect(document.querySelectorAll('[role="row"][data-rowindex]')).to.have.length(6);
-      apiRef.current.setPage(1);
+      act(() => apiRef.current.setPage(1));
       expect(document.querySelectorAll('[role="row"][data-rowindex]')).to.have.length(4);
     });
   });
@@ -658,7 +717,7 @@ describe('<DataGridPro /> - Rows', () => {
   describe('Cell focus', () => {
     let apiRef: React.MutableRefObject<GridApi>;
 
-    const TestCase = (props: Partial<DataGridProProps>) => {
+    function TestCase(props: Partial<DataGridProProps>) {
       apiRef = useGridApiRef();
 
       return (
@@ -666,7 +725,7 @@ describe('<DataGridPro /> - Rows', () => {
           <DataGridPro apiRef={apiRef} {...baselineProps} {...props} />
         </div>
       );
-    };
+    }
 
     beforeEach(() => {
       baselineProps = {
@@ -698,8 +757,7 @@ describe('<DataGridPro /> - Rows', () => {
     it('should focus the clicked cell in the state', () => {
       render(<TestCase rows={baselineProps.rows} />);
 
-      fireEvent.mouseUp(getCell(0, 0));
-      fireEvent.click(getCell(0, 0));
+      userEvent.mousePress(getCell(0, 0));
       expect(apiRef.current.state.focus.cell).to.deep.equal({
         id: baselineProps.rows[0].id,
         field: baselineProps.columns[0].field,
@@ -717,8 +775,7 @@ describe('<DataGridPro /> - Rows', () => {
     it('should not reset focus when removing a row not containing the focus cell', () => {
       const { setProps } = render(<TestCase rows={baselineProps.rows} />);
 
-      fireEvent.mouseUp(getCell(1, 0));
-      fireEvent.click(getCell(1, 0));
+      userEvent.mousePress(getCell(1, 0));
       setProps({ rows: baselineProps.rows.slice(1) });
       expect(gridFocusCellSelector(apiRef)).to.deep.equal({
         id: baselineProps.rows[1].id,
@@ -729,8 +786,7 @@ describe('<DataGridPro /> - Rows', () => {
     it('should set the focus when pressing a key inside a cell', () => {
       render(<TestCase rows={baselineProps.rows} />);
       const cell = getCell(1, 0);
-      fireEvent.mouseUp(cell);
-      fireEvent.click(cell);
+      userEvent.mousePress(cell);
       fireEvent.keyDown(cell, { key: 'a' });
       expect(gridFocusCellSelector(apiRef)).to.deep.equal({
         id: baselineProps.rows[1].id,
@@ -740,14 +796,12 @@ describe('<DataGridPro /> - Rows', () => {
 
     it('should update the focus when clicking from one cell to another', () => {
       render(<TestCase rows={baselineProps.rows} />);
-      fireEvent.mouseUp(getCell(1, 0));
-      fireEvent.click(getCell(1, 0));
+      userEvent.mousePress(getCell(1, 0));
       expect(gridFocusCellSelector(apiRef)).to.deep.equal({
         id: baselineProps.rows[1].id,
         field: baselineProps.columns[0].field,
       });
-      fireEvent.mouseUp(getCell(2, 1));
-      fireEvent.click(getCell(2, 1));
+      userEvent.mousePress(getCell(2, 1));
       expect(gridFocusCellSelector(apiRef)).to.deep.equal({
         id: baselineProps.rows[2].id,
         field: baselineProps.columns[1].field,
@@ -756,13 +810,12 @@ describe('<DataGridPro /> - Rows', () => {
 
     it('should reset focus when clicking outside the focused cell', () => {
       render(<TestCase rows={baselineProps.rows} />);
-      fireEvent.mouseUp(getCell(1, 0));
-      fireEvent.click(getCell(1, 0));
+      userEvent.mousePress(getCell(1, 0));
       expect(gridFocusCellSelector(apiRef)).to.deep.equal({
         id: baselineProps.rows[1].id,
         field: baselineProps.columns[0].field,
       });
-      fireEvent.click(document.body);
+      userEvent.mousePress(document.body);
       expect(gridFocusCellSelector(apiRef)).to.deep.equal(null);
     });
 
@@ -770,10 +823,9 @@ describe('<DataGridPro /> - Rows', () => {
       const handleCellFocusOut = spy();
       render(<TestCase rows={baselineProps.rows} />);
       apiRef.current.subscribeEvent('cellFocusOut', handleCellFocusOut);
-      fireEvent.mouseUp(getCell(1, 0));
-      fireEvent.click(getCell(1, 0));
+      userEvent.mousePress(getCell(1, 0));
       expect(handleCellFocusOut.callCount).to.equal(0);
-      fireEvent.click(document.body);
+      userEvent.mousePress(document.body);
       expect(handleCellFocusOut.callCount).to.equal(1);
       expect(handleCellFocusOut.args[0][0].id).to.equal(baselineProps.rows[1].id);
       expect(handleCellFocusOut.args[0][0].field).to.equal(baselineProps.columns[0].field);
@@ -790,8 +842,7 @@ describe('<DataGridPro /> - Rows', () => {
           />,
         );
         const cell = getCell(0, 0);
-        fireEvent.mouseUp(cell);
-        fireEvent.click(cell);
+        userEvent.mousePress(cell);
       }).not.to.throw();
     });
 
@@ -800,8 +851,26 @@ describe('<DataGridPro /> - Rows', () => {
         render(<TestCase rows={baselineProps.rows} />);
         const cell = getCell(0, 0);
         fireEvent.mouseEnter(cell);
-        apiRef.current.updateRows([{ id: 1, _action: 'delete' }]);
+        act(() => apiRef.current.updateRows([{ id: 1, _action: 'delete' }]));
         fireEvent.mouseLeave(cell);
+      }).not.to.throw();
+    });
+
+    // See https://github.com/mui/mui-x/issues/5742
+    it('should not crash when focusing header after row is removed during the click', () => {
+      expect(() => {
+        render(
+          <TestCase
+            rows={baselineProps.rows}
+            onCellClick={() => {
+              apiRef.current.updateRows([{ id: 1, _action: 'delete' }]);
+            }}
+          />,
+        );
+        const cell = getCell(0, 0);
+        userEvent.mousePress(cell);
+        const columnHeaderCell = getColumnHeaderCell(0);
+        fireEvent.focus(columnHeaderCell);
       }).not.to.throw();
     });
   });
@@ -838,14 +907,14 @@ describe('<DataGridPro /> - Rows', () => {
 
     let apiRef: React.MutableRefObject<GridApi>;
 
-    const TestCase = (props: Partial<DataGridProProps>) => {
+    function TestCase(props: Partial<DataGridProProps>) {
       apiRef = useGridApiRef();
       return (
         <div style={{ width: 300, height: 300 }}>
           <DataGridPro {...baselineProps} apiRef={apiRef} rowHeight={ROW_HEIGHT} {...props} />
         </div>
       );
-    };
+    }
 
     it('should change row height', () => {
       const resizedRowId = 1;
@@ -853,7 +922,7 @@ describe('<DataGridPro /> - Rows', () => {
 
       expect(getRow(1).clientHeight).to.equal(ROW_HEIGHT);
 
-      apiRef.current.unstable_setRowHeight(resizedRowId, 100);
+      act(() => apiRef.current.unstable_setRowHeight(resizedRowId, 100));
       expect(getRow(resizedRowId).clientHeight).to.equal(100);
     });
 
@@ -866,7 +935,7 @@ describe('<DataGridPro /> - Rows', () => {
       expect(row.clientHeight).to.equal(ROW_HEIGHT);
 
       getRowHeight.resetHistory();
-      apiRef.current.unstable_setRowHeight(resizedRowId, 100);
+      act(() => apiRef.current.unstable_setRowHeight(resizedRowId, 100));
       expect(row.clientHeight).to.equal(100);
 
       // sort
@@ -874,6 +943,45 @@ describe('<DataGridPro /> - Rows', () => {
 
       expect(row.clientHeight).to.equal(100);
       expect(getRowHeight.neverCalledWithMatch({ id: resizedRowId })).to.equal(true);
+    });
+  });
+
+  describe('prop: rowCount', () => {
+    function TestCase(props: DataGridProProps) {
+      return (
+        <div style={{ width: 300, height: 300 }}>
+          <DataGridPro {...props} />
+        </div>
+      );
+    }
+
+    it('should not show total row count in footer if `rowCount === rows.length`', () => {
+      const { rows, columns } = getBasicGridData(10, 2);
+      const rowCount = rows.length;
+      render(<TestCase rows={rows} columns={columns} rowCount={rowCount} />);
+
+      const rowCountElement = document.querySelector<HTMLElement>(`.${gridClasses.rowCount}`);
+      expect(rowCountElement!.textContent).to.equal(`Total Rows: ${rows.length}`);
+    });
+
+    it('should show total row count in footer if `rowCount !== rows.length`', () => {
+      const { rows, columns } = getBasicGridData(10, 2);
+      const rowCount = rows.length + 10;
+      render(<TestCase rows={rows} columns={columns} rowCount={rowCount} />);
+
+      const rowCountElement = document.querySelector<HTMLElement>(`.${gridClasses.rowCount}`);
+      expect(rowCountElement!.textContent).to.equal(`Total Rows: ${rows.length} of ${rowCount}`);
+    });
+
+    it('should update total row count in footer on `rowCount` prop change', () => {
+      const { rows, columns } = getBasicGridData(10, 2);
+      let rowCount = rows.length;
+      const { setProps } = render(<TestCase rows={rows} columns={columns} rowCount={rowCount} />);
+      rowCount += 1;
+      setProps({ rowCount });
+
+      const rowCountElement = document.querySelector<HTMLElement>(`.${gridClasses.rowCount}`);
+      expect(rowCountElement!.textContent).to.equal(`Total Rows: ${rows.length} of ${rowCount}`);
     });
   });
 });

@@ -1,65 +1,59 @@
-# @mui/x-date-pickers-pro
+# MUI X Date Pickers Pro
 
 This package is the commercial edition of the date and time picker components.
-It's part of MUI X, an open core extension of MUI, with advanced components.
+It's part of [MUI X](https://mui.com/x/), an open-core extension of MUI Core, with advanced components.
 
 ## Installation
 
 Install the package in your project directory with:
 
-```sh
-// with npm
+```bash
 npm install @mui/x-date-pickers-pro
-
-// with yarn
-yarn add @mui/x-date-pickers-pro
 ```
 
-This component has the following peer dependencies that you will need to install as well.
-
-```json
-"peerDependencies": {
-  "@mui/material": "^5.4.1",
-  "@mui/system": "^5.4.1",
-  "react": "^17.0.2 || ^18.0.0"
-},
-```
-
-You need to provide a date-library that is used by the pickers by setting the `dateAdapter` to an adapter of your choosing.
-
-We currently support 4 different date-libraries:
+Then install the date library of your choice (if not already installed).
+The pickers currently support the following date libraries:
 
 - [date-fns](https://date-fns.org/)
 - [Day.js](https://day.js.org/)
 - [Luxon](https://moment.github.io/luxon/#/)
 - [Moment.js](https://momentjs.com/)
 
-If you need to use `js-joda`, `date-fns-jalali`, `jalaali`, or `hijri` library, you should be able to find the corresponding date-library from [`@date-io`](https://github.com/dmtrKovalenko/date-io#projects).
-
-First, you have to install the adapter package for the date-library you want to use:
-
-```sh
+```bash
 // date-fns
-npm install @date-io/date-fns
-// or for Day.js
-npm install @date-io/dayjs
-// or for Luxon
-npm install @date-io/luxon
-// or for Moment.js
-npm install @date-io/moment
+npm install date-fns
+// or dayjs
+npm install dayjs
+// or luxon
+npm install luxon
+// or moment
+npm install moment
 ```
 
-Then you have to set the `dateAdapter` prop of the `LocalizationProvider` accordingly:
+This component has the following peer dependencies that you will need to install as well.
+
+```json
+"peerDependencies": {
+  "@mui/material": "^5.8.6",
+  "@mui/system": "^5.8.0",
+  "react": "^17.0.0 || ^18.0.0",
+  "react-dom": "^17.0.0 || ^18.0.0"
+},
+```
+
+After completing the installation, you have to set the `dateAdapter` prop of the `LocalizationProvider` accordingly.
+The supported adapters are exported from `@mui/x-date-pickers-pro`.
 
 ```js
+import { LocalizationProvider } from '@mui/x-date-pickers-pro';
 // date-fns
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-// or for Day.js
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-// or for Luxon
-import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
-// or for Moment.js
-import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
+import { AdapterDateFns } from '@mui/x-date-pickers-pro/AdapterDateFns';
+// or for dayjs
+import { AdapterDayjs } from '@mui/x-date-pickers-pro/AdapterDayjs';
+// or for luxon
+import { AdapterLuxon } from '@mui/x-date-pickers-pro/AdapterLuxon';
+// or for moment
+import { AdapterMoment } from '@mui/x-date-pickers-pro/AdapterMoment';
 
 function App({ children }) {
   return <LocalizationProvider dateAdapter={AdapterDateFns}>{children}</LocalizationProvider>;
@@ -68,4 +62,4 @@ function App({ children }) {
 
 ## Documentation
 
-[The documentation](https://mui.com/x/react-date-pickers/getting-started/)
+Visit [https://mui.com/x/react-date-pickers/](https://mui.com/x/react-date-pickers/) to view the full documentation.

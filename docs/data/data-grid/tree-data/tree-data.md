@@ -2,7 +2,7 @@
 title: Data Grid - Tree data
 ---
 
-# Data Grid - Tree data [<span class="plan-pro"></span>](https://mui.com/store/items/mui-x-pro/)
+# Data Grid - Tree data [<span class="plan-pro"></span>](/x/introduction/licensing/#pro-plan 'Pro plan')
 
 <p class="description">Use Tree data to handle rows with parent / child relationship.</p>
 
@@ -16,7 +16,7 @@ The `getTreeDataPath` function returns an array of strings which represents the 
 //         - Robert
 //         - Karen
 
-const columns: GridColumns = [{ field: 'jobTitle', width: 250 }];
+const columns: GridColDef[] = [{ field: 'jobTitle', width: 250 }];
 
 // Without transformation
 const rows: GridRowsProp = [
@@ -113,19 +113,21 @@ You can limit the sorting to the top-level rows with the `disableChildrenSorting
 > const invalidRows = [{ path: ['A'] }, { path: ['B'] }, { path: ['A', 'A'] }];
 > ```
 
-## Children lazy-loading
+## Children lazy-loading 🚧
 
 :::warning
 This feature isn't implemented yet. It's coming.
 
 👍 Upvote [issue #3377](https://github.com/mui/mui-x/issues/3377) if you want to see it land faster.
+
+Don't hesitate to leave a comment on the same issue to influence what gets built. Especially if you already have a use case for this component, or if you are facing a pain point with your current solution.
 :::
 
 Alternatively, you can achieve a similar behavior by implementing this feature outside the component as shown below.
-This implementation does not support every feature of the grid but can be a good starting point for large datasets.
+This implementation does not support every feature of the data grid but can be a good starting point for large datasets.
 
 The idea is to add a property `descendantCount` on the row and to use it instead of the internal grid state.
-To do so, we need to override both the `renderCell` of the grouping column and to manually open the rows by listening to `rowExpansionChange` event.
+To do so, you need to override both the `renderCell` of the grouping column and to manually open the rows by listening to `rowExpansionChange` event.
 
 {{"demo": "TreeDataLazyLoading.js", "bg": "inline", "defaultCodeOpen": false}}
 
@@ -137,3 +139,4 @@ To do so, we need to override both the `renderCell` of the grouping column and t
 
 - [DataGrid](/x/api/data-grid/data-grid/)
 - [DataGridPro](/x/api/data-grid/data-grid-pro/)
+- [DataGridPremium](/x/api/data-grid/data-grid-premium/)

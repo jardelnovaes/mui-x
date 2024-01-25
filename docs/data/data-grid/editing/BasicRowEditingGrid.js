@@ -9,19 +9,21 @@ import {
 export default function BasicRowEditingGrid() {
   return (
     <div style={{ height: 300, width: '100%' }}>
-      <DataGrid
-        editMode="row"
-        rows={rows}
-        columns={columns}
-        experimentalFeatures={{ newEditingApi: true }}
-      />
+      <DataGrid editMode="row" rows={rows} columns={columns} />
     </div>
   );
 }
 
 const columns = [
   { field: 'name', headerName: 'Name', width: 180, editable: true },
-  { field: 'age', headerName: 'Age', type: 'number', editable: true },
+  {
+    field: 'age',
+    headerName: 'Age',
+    type: 'number',
+    editable: true,
+    align: 'left',
+    headerAlign: 'left',
+  },
   {
     field: 'dateCreated',
     headerName: 'Date Created',
